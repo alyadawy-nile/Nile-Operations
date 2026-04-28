@@ -48,7 +48,7 @@ html[dir="rtl"] .kpi-label{letter-spacing:0;}
 .btn-lang{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:var(--font-display);font-weight:700;font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.15s;letter-spacing:0.3px;}
 .btn-lang:hover{background:rgba(255,255,255,0.18);}
 
-.container{max-width:1280px;margin:0 auto;padding:24px 24px;}
+.container{max-width:1100px;margin:0 auto;padding:24px 40px;}
 
 .tabs{display:flex;gap:2px;margin-bottom:22px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
 .tab{font-family:var(--font-display);font-weight:700;font-size:12px;padding:7px 18px;border-radius:7px;cursor:pointer;color:var(--text3);transition:all 0.15s;border:none;background:transparent;}
@@ -255,6 +255,7 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
     <button class="tab" onclick="showTab('claims',this)" data-en="Claims" data-ar="المطالبات">Claims</button>
     <button class="tab" onclick="showTab('buyers',this)" data-en="Buyers" data-ar="المشترون">Buyers</button>
     <button class="tab" onclick="showTab('markets',this)" data-en="Markets" data-ar="الأسواق">Markets</button>
+    <button class="tab" onclick="showTab('receivables',this)">Receivables</button>
   </div>
 
   <!-- OVERVIEW -->
@@ -372,6 +373,32 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
       <tbody id="m-tbody"></tbody></table>
     </div></div>
   </div>
+
+  <!-- RECEIVABLES -->
+  <div class="tab-panel" id="tab-receivables">
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="kpi-label">Total Outstanding</div><div class="kpi-value" id="r-total">—</div><div class="kpi-sub">USD owed to Nile Est.</div></div>
+      <div class="kpi gold"><div class="kpi-label">Total Invoiced</div><div class="kpi-value" id="r-invoiced">—</div><div class="kpi-sub">This season</div></div>
+      <div class="kpi green"><div class="kpi-label">Total Collected</div><div class="kpi-value" id="r-collected">—</div><div class="kpi-sub">Payments received</div></div>
+      <div class="kpi blue"><div class="kpi-label">Collection Rate</div><div class="kpi-value" id="r-rate">—</div><div class="kpi-sub">% of invoiced value paid</div></div>
+      <div class="kpi teal"><div class="kpi-label">Total Containers</div><div class="kpi-value" id="r-ctns">—</div><div class="kpi-sub">Season total</div></div>
+    </div>
+    <div class="grid-3" id="r-group-cards"></div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">All Client Balances</div>
+        <div class="panel-sub">Outstanding balances by client</div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th>Client</th><th>Group</th><th>Type</th><th>Containers</th>
+          <th>Invoiced</th><th>Paid</th><th>Credits</th><th>Balance</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="r-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -722,7 +749,119 @@ async function deleteSh(id){
   }catch(e){toast(t('Error: ','خطأ: ')+e.message,'error');}
 }
 
-function openModal(){document.getElementById('modalOverlay').classList.add('open');}
+let RDATA=[];
+
+async function loadReceivables(){
+  try{
+    const{data,error}=await db.from('receivables').select('*').order('group_name');
+    if(error)throw error;
+    RDATA=data||[];
+    renderReceivables();
+  }catch(e){console.error('Receivables error:',e);}
+}
+
+function fmtM(n){
+  if(!n&&n!==0)return'—';
+  const abs=Math.abs(n);
+  if(abs>=1000000)return(n<0?'-':'')+'$'+(abs/1000000).toFixed(2)+'M';
+  if(abs>=1000)return(n<0?'-':'')+'$'+(abs/1000).toFixed(1)+'k';
+  return(n<0?'-':'')+'$'+Math.abs(n).toFixed(0);
+}
+
+function renderReceivables(){
+  if(!RDATA.length)return;
+
+  const totalInvoiced=RDATA.reduce((s,r)=>s+(r.value_usd||0),0);
+  const totalPaid=RDATA.reduce((s,r)=>s+(r.paid_usd||0),0);
+  const totalBalance=RDATA.reduce((s,r)=>s+(r.balance||0),0);
+  const totalCtns=RDATA.reduce((s,r)=>s+(r.containers||0),0);
+  const rate=totalInvoiced?((totalPaid/totalInvoiced)*100).toFixed(0)+'%':'—';
+
+  document.getElementById('r-total').textContent=fmtM(totalBalance);
+  document.getElementById('r-invoiced').textContent=fmtM(totalInvoiced);
+  document.getElementById('r-collected').textContent=fmtM(totalPaid);
+  document.getElementById('r-rate').textContent=rate;
+  document.getElementById('r-ctns').textContent=totalCtns;
+
+  // Group summary cards
+  const groups={};
+  RDATA.forEach(r=>{
+    const g=r.group_name||'Other';
+    if(!groups[g])groups[g]={invoiced:0,paid:0,balance:0,ctns:0,type:r.client_type};
+    groups[g].invoiced+=r.value_usd||0;
+    groups[g].paid+=r.paid_usd||0;
+    groups[g].balance+=r.balance||0;
+    groups[g].ctns+=r.containers||0;
+  });
+
+  const groupColors={
+    'Gulf Countries':'var(--blue2)','A.NADA':'var(--purple)',
+    'SSL':'var(--teal)','BGP':'var(--amber)','HEBA':'var(--green)','Nile':'var(--navy)'
+  };
+
+  document.getElementById('r-group-cards').innerHTML=Object.entries(groups).map(([name,g])=>{
+    const colRate=g.invoiced?(g.paid/g.invoiced*100).toFixed(0):0;
+    const col=groupColors[name]||'var(--blue2)';
+    const balColor=g.balance>50000?'var(--red)':g.balance>0?'var(--amber)':'var(--green)';
+    return`<div class="panel" style="border-top:3px solid ${col}">
+      <div class="panel-header"><div class="panel-title">${name}</div><div class="panel-sub">${g.ctns} containers · ${g.type}</div></div>
+      <div class="panel-body">
+        <div class="bar-row"><div class="bar-label">Invoiced</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy)">${fmtM(g.invoiced)}</div></div>
+        <div class="bar-row"><div class="bar-label">Collected</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--green)">${fmtM(g.paid)}</div></div>
+        <div class="bar-row"><div class="bar-label">Outstanding</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${balColor}">${fmtM(g.balance)}</div></div>
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-bottom:4px"><span>Collection rate</span><span>${colRate}%</span></div>
+          <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;width:${colRate}%;background:${col};border-radius:3px;transition:width 0.8s ease"></div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Client table
+  document.getElementById('r-tbody').innerHTML=RDATA.map(r=>{
+    const bal=r.balance||0;
+    const balColor=bal>50000?'var(--red)':bal>5000?'var(--amber)':bal>0?'var(--text2)':'var(--green)';
+    const status=bal>50000
+      ?`<span class="badge badge-claim">⚠ High</span>`
+      :bal>5000
+      ?`<span class="badge badge-solved">↑ Pending</span>`
+      :bal<=0
+      ?`<span class="badge badge-clean">✓ Settled</span>`
+      :`<span class="badge badge-clean">✓ Low</span>`;
+    return`<tr>
+      <td style="color:var(--navy);font-weight:600">${r.client_name}</td>
+      <td><span style="background:var(--blue3);color:var(--blue2);padding:2px 8px;border-radius:10px;font-size:10px;font-family:var(--font-mono)">${r.group_name||'—'}</span></td>
+      <td style="color:var(--text3);font-size:11px">${r.client_type||'—'}</td>
+      <td class="mono">${r.containers||'—'}</td>
+      <td class="mono" style="color:var(--text2)">${fmtM(r.value_usd)}</td>
+      <td class="mono" style="color:var(--green)">${fmtM(r.paid_usd)}</td>
+      <td class="mono" style="color:var(--text3)">${fmtM(r.credits)}</td>
+      <td class="mono" style="color:${balColor};font-weight:700">${fmtM(bal)}</td>
+      <td>${status}</td>
+      <td><button class="edit-btn" onclick="editReceivable('${r.id}')">✎</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function editReceivable(id){
+  const r=RDATA.find(x=>x.id===id);
+  if(!r)return;
+  const newBalance=prompt(`Update balance for ${r.client_name}:\nCurrent balance: $${r.balance}\n\nEnter new balance (USD):`,r.balance);
+  if(newBalance===null)return;
+  const newPaid=prompt(`Update paid amount:\nCurrent paid: $${r.paid_usd}\n\nEnter new paid amount (USD):`,r.paid_usd);
+  if(newPaid===null)return;
+  try{
+    const{error}=await db.from('receivables').update({
+      balance:parseFloat(newBalance)||0,
+      paid_usd:parseFloat(newPaid)||0,
+    }).eq('id',id);
+    if(error)throw error;
+    toast('Receivable updated');
+    await loadReceivables();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
 
 function showTab(id,el){
@@ -737,7 +876,9 @@ function renderAll(){
 }
 
 db.channel('shipments-rt').on('postgres_changes',{event:'*',schema:'public',table:'shipments'},()=>loadData()).subscribe();
+db.channel('receivables-rt').on('postgres_changes',{event:'*',schema:'public',table:'receivables'},()=>loadReceivables()).subscribe();
 loadData();
+loadReceivables();
 </script>
 </body>
 </html>
