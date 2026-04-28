@@ -130,7 +130,7 @@ select.fi{cursor:pointer;min-width:145px;}
 .btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
 .btn-ghost:hover{border-color:var(--text3);color:var(--text);}
 
-.price-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
 .price-card{background:var(--blue3);border:1px solid var(--blue4);border-radius:10px;padding:16px;}
 .price-market{font-size:9px;color:var(--blue);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;}
 .price-val{font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--navy);}
@@ -664,7 +664,7 @@ function renderOverview(){
 
   document.getElementById('price-by-market').innerHTML=Object.entries(pm)
     .filter(([,m])=>m.prices.length>0)
-    .sort((a,b)=>b[1].count-a[1].count).slice(0,8).map(([market,m])=>{
+    .sort((a,b)=>b[1].count-a[1].count).map(([market,m])=>{
     const a=avg(m.prices);
     const cls=a>600?'t-premium':a>450?'t-mid':'t-low';
     const lbl=a>600?t('▲ Premium','▲ ممتاز'):a>450?t('◆ Mid-range','◆ متوسط'):t('▼ Suppressed','▼ منخفض');
