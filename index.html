@@ -6,6 +6,7 @@
 <title>Nile Establishment — Live Operations</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#f0f4f9;--bg2:#ffffff;--bg3:#f7f9fc;--bg4:#edf2f8;
@@ -172,6 +173,7 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
   <div class="header-right">
     <div class="live-badge"><div class="live-dot"></div><span data-en="LIVE DATABASE" data-ar="قاعدة بيانات مباشرة">LIVE DATABASE</span></div>
     <button class="btn-lang" onclick="toggleLang()" id="langBtn">عربي</button>
+    <button class="btn-add" onclick="openImport()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2)" data-en="↑ Import Excel" data-ar="↑ استيراد إكسل">↑ Import Excel</button>
     <button class="btn-add" onclick="openModal()" data-en="+ Add Shipment" data-ar="+ إضافة شحنة">+ Add Shipment</button>
   </div>
 </div>
@@ -254,6 +256,89 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
     <div class="form-actions">
       <button class="btn btn-primary" onclick="updateShipment()">Save Changes</button>
       <button class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK RECEIVABLES MODAL -->
+<div class="modal-overlay" id="bulkRecOverlay" onclick="if(event.target===this)closeReceivablesUpdate()">
+  <div class="modal" style="width:820px">
+    <div class="modal-title">Update Receivables | تحديث المستحقات</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Edit paid, credits, and balance for each client. Click Save All when done.</p>
+    <div style="overflow-x:auto">
+      <table id="bulk-rec-table" style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;border-bottom:1px solid var(--border)">Client</th>
+          <th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;border-bottom:1px solid var(--border)">Group</th>
+          <th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;border-bottom:1px solid var(--border)">Paid ($)</th>
+          <th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;border-bottom:1px solid var(--border)">Credits ($)</th>
+          <th style="text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;border-bottom:1px solid var(--border)">Balance ($)</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="form-actions" style="margin-top:20px">
+      <button class="btn btn-primary" onclick="saveBulkReceivables()">Save All Changes</button>
+      <button class="btn btn-ghost" onclick="closeReceivablesUpdate()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXCEL IMPORT MODAL -->
+<div class="modal-overlay" id="importOverlay" onclick="if(event.target===this)closeImport()">
+  <div class="modal" style="width:900px;max-height:90vh">
+    <div class="modal-title">↑ Import Excel File | استيراد ملف إكسل</div>
+    <div id="import-step1">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Upload any Excel file. Map the columns, preview, then import directly to the database.</p>
+      <div id="import-dropzone" onclick="document.getElementById('import-file-input').click()"
+        style="border:2px dashed var(--border2);border-radius:12px;padding:40px;text-align:center;cursor:pointer;background:var(--bg3)">
+        <div style="font-size:32px;margin-bottom:12px">📂</div>
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--navy);font-size:14px;margin-bottom:6px">Click to select Excel file</div>
+        <div style="font-size:11px;color:var(--text3)">.xlsx · .xls · .csv — any format</div>
+      </div>
+      <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+    </div>
+    <div id="import-step2" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="fg"><label>Sheet</label><select id="import-sheet" class="fi" style="width:100%" onchange="loadSheetPreview()"></select></div>
+        <div class="fg"><label>Header row number</label><input id="import-header-row" class="fi" type="number" value="1" min="1" max="20" style="width:100%" onchange="loadSheetPreview()"></div>
+      </div>
+      <div id="import-preview-wrap" style="overflow-x:auto;max-height:180px;border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:11px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="goToMapping()">Next: Map Columns →</button>
+        <button class="btn btn-ghost" onclick="resetImport()">← Back</button>
+      </div>
+    </div>
+    <div id="import-step3" style="display:none">
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--navy);font-size:13px;margin-bottom:6px">Map columns to database fields</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px">Match each column in your file to the correct field. Skip columns you don't need.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;padding:0 4px">
+        <div style="font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px">Your Excel Column</div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px">Maps to Database Field</div>
+      </div>
+      <div id="import-mapping" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+        <select id="import-target-table" class="fi">
+          <option value="shipments">→ Shipments table</option>
+          <option value="receivables">→ Receivables table</option>
+        </select>
+        <button class="btn btn-primary" onclick="previewImport()">Preview →</button>
+        <button class="btn btn-ghost" onclick="goToStep2()">← Back</button>
+      </div>
+    </div>
+    <div id="import-step4" style="display:none">
+      <div id="import-summary" style="background:var(--blue3);border:1px solid var(--blue4);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--navy)"></div>
+      <div style="overflow-x:auto;max-height:280px;border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
+        <table style="width:100%;border-collapse:collapse;font-size:11px" id="import-preview-table">
+          <thead id="import-preview-head" style="position:sticky;top:0;background:var(--bg3)"></thead>
+          <tbody id="import-preview-body"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="confirmImport()">✓ Import All Rows</button>
+        <button class="btn btn-ghost" onclick="goToMapping()">← Back</button>
+        <button class="btn btn-ghost" onclick="closeImport()">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
@@ -407,7 +492,10 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title" data-en="All Client Balances" data-ar="أرصدة جميع العملاء">All Client Balances</div>
-        <div class="panel-sub" data-en="Outstanding balances by client" data-ar="الأرصدة المستحقة لكل عميل">Outstanding balances by client</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="panel-sub" data-en="Outstanding balances by client" data-ar="الأرصدة المستحقة لكل عميل">Outstanding balances by client</div>
+          <button class="btn-add" onclick="buildBulkRecTable()" style="font-size:11px;padding:6px 14px" data-en="↻ Update Balances" data-ar="↻ تحديث الأرصدة">↻ Update Balances</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table><thead><tr>
@@ -911,7 +999,250 @@ async function editReceivable(id){
 }
 
 
+function openModal(){document.getElementById('modalOverlay').classList.add('open');}
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+// ── EXCEL IMPORT ───────────────────────────────────
+let importWB = null;
+let importColumns = [];
+let importRows = [];
+
+const SHIPMENT_FIELDS = [
+  {val:'',label:'— Skip —'},
+  {val:'buyer',label:'Buyer'},
+  {val:'variety',label:'Variety'},
+  {val:'class',label:'Class'},
+  {val:'pod',label:'Destination Port (POD)'},
+  {val:'vessel',label:'Vessel Name'},
+  {val:'etd',label:'ETD (departure date)'},
+  {val:'eta',label:'ETA (arrival date)'},
+  {val:'shipping_line',label:'Shipping Line'},
+  {val:'price',label:'Price / carton (72-88)'},
+  {val:'price_100',label:'Price / carton (100)'},
+  {val:'payment_terms',label:'Payment Terms'},
+  {val:'container_numbers',label:'Container Numbers'},
+  {val:'booking_ref',label:'Booking Ref'},
+  {val:'claim_status',label:'Claim Status'},
+  {val:'shipment_status',label:'Shipment Status'},
+  {val:'season_week',label:'Season Week'},
+  {val:'ref',label:'Reference / PEF No.'},
+  {val:'supplier',label:'Supplier'},
+  {val:'brand',label:'Brand'},
+  {val:'notes',label:'Notes'},
+];
+
+const RECEIVABLES_FIELDS = [
+  {val:'',label:'— Skip —'},
+  {val:'client_name',label:'Client Name'},
+  {val:'group_name',label:'Group'},
+  {val:'client_type',label:'Type (Direct/Agent)'},
+  {val:'containers',label:'Containers'},
+  {val:'value_usd',label:'Invoiced Value ($)'},
+  {val:'paid_usd',label:'Paid ($)'},
+  {val:'credits',label:'Credits ($)'},
+  {val:'balance',label:'Balance ($)'},
+  {val:'debit',label:'Debit'},
+  {val:'transfer',label:'Transfer'},
+  {val:'notes',label:'Notes'},
+];
+
+function openImport(){
+  resetImport();
+  document.getElementById('importOverlay').classList.add('open');
+}
+function closeImport(){
+  document.getElementById('importOverlay').classList.remove('open');
+  resetImport();
+}
+function resetImport(){
+  importWB=null; importColumns=[]; importRows=[];
+  document.getElementById('import-file-input').value='';
+  document.getElementById('import-step1').style.display='block';
+  document.getElementById('import-step2').style.display='none';
+  document.getElementById('import-step3').style.display='none';
+  document.getElementById('import-step4').style.display='none';
+}
+function goToStep2(){
+  document.getElementById('import-step2').style.display='block';
+  document.getElementById('import-step3').style.display='none';
+}
+function goToMapping(){
+  document.getElementById('import-step3').style.display='block';
+  document.getElementById('import-step2').style.display='none';
+  document.getElementById('import-step4').style.display='none';
+}
+
+function handleImportFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      importWB = XLSX.read(e.target.result, {type:'binary', cellDates:true});
+      const sheetSel = document.getElementById('import-sheet');
+      sheetSel.innerHTML = importWB.SheetNames.map(s=>`<option>${s}</option>`).join('');
+      document.getElementById('import-step1').style.display='none';
+      document.getElementById('import-step2').style.display='block';
+      loadSheetPreview();
+    } catch(err) {
+      toast('Could not read file: '+err.message,'error');
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function loadSheetPreview(){
+  if(!importWB) return;
+  const sheet = importWB.Sheets[document.getElementById('import-sheet').value];
+  const headerRow = parseInt(document.getElementById('import-header-row').value||1) - 1;
+  const raw = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+  if(raw.length <= headerRow){ toast('Header row not found','error'); return; }
+
+  importColumns = raw[headerRow].map(c=>String(c).trim()).filter(Boolean);
+  importRows = raw.slice(headerRow+1).filter(r=>r.some(c=>c!==''&&c!==null&&c!==undefined));
+
+  // Show preview (first 5 rows)
+  const preview = [importColumns, ...importRows.slice(0,5)];
+  const wrap = document.getElementById('import-preview-wrap');
+  wrap.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px">` +
+    preview.map((row,ri)=>`<tr>${row.slice(0,Math.min(row.length,12)).map(cell=>`
+      <td style="padding:5px 8px;border-bottom:1px solid var(--border);${ri===0?'font-weight:700;color:var(--navy);background:var(--bg3)':'color:var(--text2)'};white-space:nowrap">${String(cell).substring(0,30)}</td>`).join('')}</tr>`).join('') +
+    `</table>`;
+}
+
+function goToMapping(){
+  if(!importColumns.length){ toast('Please load a file first','error'); return; }
+  const target = document.getElementById('import-target-table').value || 'shipments';
+  const fields = target==='receivables' ? RECEIVABLES_FIELDS : SHIPMENT_FIELDS;
+  const fieldOpts = fields.map(f=>`<option value="${f.val}">${f.label}</option>`).join('');
+
+  // Auto-match by name similarity
+  function autoMatch(col){
+    const c = col.toLowerCase().replace(/[^a-z0-9]/g,'');
+    for(const f of fields){
+      if(!f.val) continue;
+      const fk = f.val.replace(/_/g,'');
+      const fl = f.label.toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(c===fk||c.includes(fk)||fl.includes(c)||c.includes(fl.split(' ')[0]))return f.val;
+    }
+    return '';
+  }
+
+  document.getElementById('import-mapping').innerHTML = importColumns.map((col,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--navy);font-weight:500">${col}</div>
+      <select class="fi import-field-sel" data-col="${i}" style="width:100%;padding:6px 10px;font-size:12px">
+        ${fields.map(f=>`<option value="${f.val}" ${autoMatch(col)===f.val?'selected':''}>${f.label}</option>`).join('')}
+      </select>
+    </div>`).join('');
+
+  document.getElementById('import-step2').style.display='none';
+  document.getElementById('import-step3').style.display='block';
+}
+
+function previewImport(){
+  const sels = document.querySelectorAll('.import-field-sel');
+  const mapping = {};
+  sels.forEach(sel=>{
+    if(sel.value) mapping[parseInt(sel.dataset.col)] = sel.value;
+  });
+  if(!Object.keys(mapping).length){ toast('Map at least one column','error'); return; }
+
+  // Build preview rows
+  const mapped = importRows.map(row=>{
+    const obj={};
+    Object.entries(mapping).forEach(([colIdx,field])=>{
+      let val = row[colIdx];
+      if(val instanceof Date) val = val.toISOString().split('T')[0];
+      if(val!==''&&val!==null&&val!==undefined) obj[field]=String(val).trim();
+    });
+    return obj;
+  }).filter(r=>Object.keys(r).length>0);
+
+  window._importMapped = mapped;
+  window._importMapping = mapping;
+
+  const keys = [...new Set(mapped.flatMap(r=>Object.keys(r)))];
+  const head = `<tr>${keys.map(k=>`<th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border)">${k}</th>`).join('')}</tr>`;
+  const body = mapped.slice(0,10).map(r=>`<tr>${keys.map(k=>`<td style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);white-space:nowrap">${r[k]||'—'}</td>`).join('')}</tr>`).join('');
+
+  document.getElementById('import-preview-head').innerHTML=head;
+  document.getElementById('import-preview-body').innerHTML=body;
+  document.getElementById('import-summary').innerHTML=
+    `<strong>${mapped.length} rows</strong> ready to import into <strong>${document.getElementById('import-target-table').value}</strong> table.${mapped.length>10?' Showing first 10 rows.':''}`;
+
+  document.getElementById('import-step3').style.display='none';
+  document.getElementById('import-step4').style.display='block';
+}
+
+async function confirmImport(){
+  const btn = document.getElementById('import-confirm-btn');
+  const rows = window._importMapped;
+  const table = document.getElementById('import-target-table').value;
+  if(!rows||!rows.length){toast('No data to import','error');return;}
+  btn.textContent='Importing...';
+  btn.disabled=true;
+  try{
+    // Insert in batches of 50
+    for(let i=0;i<rows.length;i+=50){
+      const batch=rows.slice(i,i+50);
+      const{error}=await db.from(table).insert(batch);
+      if(error)throw error;
+    }
+    toast(`✓ ${rows.length} rows imported successfully`);
+    closeImport();
+    if(table==='shipments') await loadData();
+    else await loadReceivables();
+  }catch(e){
+    toast('Import error: '+e.message,'error');
+  }finally{
+    btn.textContent='✓ Import All Rows';
+    btn.disabled=false;
+  }
+}
+
+// ── BULK RECEIVABLES UPDATE ────────────────────────
+function openReceivablesUpdate(){
+  document.getElementById('bulkRecOverlay').classList.add('open');
+}
+function closeReceivablesUpdate(){
+  document.getElementById('bulkRecOverlay').classList.remove('open');
+}
+
+async function saveBulkReceivables(){
+  const rows = document.querySelectorAll('#bulk-rec-table tbody tr');
+  const updates = [];
+  rows.forEach(row => {
+    const id = row.dataset.id;
+    const paid = parseFloat(row.querySelector('.br-paid').value)||0;
+    const balance = parseFloat(row.querySelector('.br-balance').value)||0;
+    const credits = parseFloat(row.querySelector('.br-credits').value)||0;
+    updates.push({id, paid_usd:paid, balance, credits});
+  });
+  try{
+    for(const u of updates){
+      const{error}=await db.from('receivables').update({
+        paid_usd:u.paid_usd, balance:u.balance, credits:u.credits
+      }).eq('id',u.id);
+      if(error)throw error;
+    }
+    toast('All receivables updated');
+    closeReceivablesUpdate();
+    await loadReceivables();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function buildBulkRecTable(){
+  document.getElementById('bulk-rec-table').querySelector('tbody').innerHTML = RDATA.map(r=>`
+    <tr data-id="${r.id}">
+      <td style="color:var(--navy);font-weight:600;padding:6px 10px;font-size:12px">${r.client_name}</td>
+      <td style="padding:4px"><span style="background:var(--blue3);color:var(--blue2);padding:2px 8px;border-radius:10px;font-size:10px">${r.group_name}</span></td>
+      <td style="padding:4px"><input class="br-paid fi" type="number" step="0.01" value="${r.paid_usd||0}" style="width:110px;padding:5px 8px;font-size:12px"></td>
+      <td style="padding:4px"><input class="br-credits fi" type="number" step="0.01" value="${r.credits||0}" style="width:110px;padding:5px 8px;font-size:12px"></td>
+      <td style="padding:4px"><input class="br-balance fi" type="number" step="0.01" value="${r.balance||0}" style="width:110px;padding:5px 8px;font-size:12px;color:${(r.balance||0)>0?'var(--red)':'var(--green)'}"></td>
+    </tr>`).join('');
+  openReceivablesUpdate();
+}
 
 function showTab(id,el){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
