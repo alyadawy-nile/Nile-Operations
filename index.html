@@ -334,10 +334,14 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
           <tbody id="import-preview-body"></tbody>
         </table>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="confirmImport()">✓ Import All Rows</button>
         <button class="btn btn-ghost" onclick="goToMapping()">← Back</button>
         <button class="btn btn-ghost" onclick="closeImport()">Cancel</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--red);cursor:pointer;margin-left:8px">
+          <input type="checkbox" id="import-replace-check">
+          Replace existing data in this table
+        </label>
       </div>
     </div>
   </div>
@@ -1179,21 +1183,52 @@ async function confirmImport(){
   const btn = document.getElementById('import-confirm-btn');
   const rows = window._importMapped;
   const table = document.getElementById('import-target-table').value;
+  const replace = document.getElementById('import-replace-check')?.checked;
   if(!rows||!rows.length){toast('No data to import','error');return;}
+
   btn.textContent='Importing...';
   btn.disabled=true;
+
   try{
+    // If replace mode, delete existing records first
+    if(replace){
+      const{error:delErr}=await db.from(table).delete().neq('id','00000000-0000-0000-0000-000000000000');
+      if(delErr)throw delErr;
+    }
+
+    // Clean rows — remove any where the first mapped field looks like a header/group row
+    const cleanRows = rows.filter(r=>{
+      // Skip rows where client_name or buyer is a group label or header word
+      const name = r.client_name||r.buyer||'';
+      const skipWords = ['client','total','group','clients','subtotal','grand','ssl','bgp','heba','nile clients','a.nada','gulf'];
+      return !skipWords.some(w=>name.toLowerCase().trim()===w||name.toLowerCase().includes('total'));
+    }).map(r=>{
+      // Convert numeric strings to numbers for numeric fields
+      const numFields = ['quantity','tons','containers','value_usd','paid_usd','credits','balance','debit','transfer','price','price_100','season_week'];
+      const cleaned = {...r};
+      numFields.forEach(f=>{
+        if(cleaned[f]!==undefined){
+          const n = parseFloat(String(cleaned[f]).replace(/[$,]/g,''));
+          cleaned[f] = isNaN(n) ? null : n;
+        }
+      });
+      return cleaned;
+    });
+
+    if(!cleanRows.length){toast('No valid rows found after filtering','error');btn.textContent='✓ Import All Rows';btn.disabled=false;return;}
+
     // Insert in batches of 50
-    for(let i=0;i<rows.length;i+=50){
-      const batch=rows.slice(i,i+50);
+    for(let i=0;i<cleanRows.length;i+=50){
+      const batch=cleanRows.slice(i,i+50);
       const{error}=await db.from(table).insert(batch);
       if(error)throw error;
     }
-    toast(`✓ ${rows.length} rows imported successfully`);
+    toast(`✓ ${cleanRows.length} rows imported successfully`);
     closeImport();
     if(table==='shipments') await loadData();
     else await loadReceivables();
   }catch(e){
+    console.error('Import error:',e);
     toast('Import error: '+e.message,'error');
   }finally{
     btn.textContent='✓ Import All Rows';
