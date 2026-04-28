@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nile Establishment — Live Operations</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#f0f4f9;--bg2:#ffffff;--bg3:#f7f9fc;--bg4:#edf2f8;
@@ -14,26 +14,44 @@
   --blue:#1a5fd4;--blue2:#2272f0;--blue3:#e8f0fd;--blue4:#d0e2fc;
   --navy:#0a2a5c;--teal:#0891b2;--green:#16a34a;
   --red:#dc2626;--amber:#d97706;--purple:#7c3aed;--gold:#b45309;
+  --font-main:'DM Sans',sans-serif;
+  --font-display:'Syne',sans-serif;
+  --font-mono:'DM Mono',monospace;
 }
+[lang="ar"]{--font-main:'Cairo',sans-serif;--font-display:'Cairo',sans-serif;--font-mono:'Cairo',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+body{font-family:var(--font-main);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;}
+html[dir="rtl"] .bar-val{text-align:left;}
+html[dir="rtl"] .result-count{margin-left:0;margin-right:auto;}
+html[dir="rtl"] .header{flex-direction:row-reverse;}
+html[dir="rtl"] .logo-wrap{flex-direction:row-reverse;}
+html[dir="rtl"] .header-right{flex-direction:row-reverse;}
+html[dir="rtl"] .filters{flex-direction:row-reverse;}
+html[dir="rtl"] th{text-align:right;}
+html[dir="rtl"] td{text-align:right;}
+html[dir="rtl"] .panel-header{flex-direction:row-reverse;}
+html[dir="rtl"] .tabs{flex-direction:row-reverse;}
+html[dir="rtl"] .form-actions{flex-direction:row-reverse;}
+html[dir="rtl"] .kpi-label{letter-spacing:0;}
 
 .header{background:var(--navy);border-bottom:1px solid rgba(255,255,255,0.07);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:62px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(10,42,92,0.25);}
 .logo-wrap{display:flex;align-items:center;gap:14px;}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2272f0,#60a5fa);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff;flex-shrink:0;}
-.logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;letter-spacing:-0.3px;}
-.logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2272f0,#60a5fa);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:15px;color:#fff;flex-shrink:0;}
+.logo-text{font-family:var(--font-display);font-weight:800;font-size:16px;color:#fff;letter-spacing:-0.3px;}
+.logo-sub{font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
 .header-right{display:flex;align-items:center;gap:10px;}
-.live-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:0.8px;}
+.live-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:0.8px;}
 .live-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-.btn-add{background:var(--blue2);border:none;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:9px 18px;border-radius:8px;cursor:pointer;transition:background 0.15s;letter-spacing:0.3px;}
+.btn-add{background:var(--blue2);border:none;color:#fff;font-family:var(--font-display);font-weight:700;font-size:12px;padding:9px 18px;border-radius:8px;cursor:pointer;transition:background 0.15s;}
 .btn-add:hover{background:var(--blue);}
+.btn-lang{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:var(--font-display);font-weight:700;font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all 0.15s;letter-spacing:0.3px;}
+.btn-lang:hover{background:rgba(255,255,255,0.18);}
 
-.container{max-width:1400px;margin:0 auto;padding:24px 32px;}
+.container{max-width:1100px;margin:0 auto;padding:24px 40px;}
 
 .tabs{display:flex;gap:2px;margin-bottom:22px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;width:fit-content;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
-.tab{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:7px 18px;border-radius:7px;cursor:pointer;color:var(--text3);transition:all 0.15s;border:none;background:transparent;letter-spacing:0.3px;}
+.tab{font-family:var(--font-display);font-weight:700;font-size:12px;padding:7px 18px;border-radius:7px;cursor:pointer;color:var(--text3);transition:all 0.15s;border:none;background:transparent;}
 .tab.active{background:var(--navy);color:#fff;box-shadow:0 2px 8px rgba(10,42,92,0.2);}
 .tab:hover:not(.active){color:var(--text2);background:var(--bg4);}
 
@@ -46,8 +64,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .kpi.green::after{background:linear-gradient(90deg,var(--green),#4ade80);}
 .kpi.gold::after{background:linear-gradient(90deg,var(--gold),#fbbf24);}
 .kpi:hover{box-shadow:0 4px 14px rgba(0,0,0,0.09);border-color:var(--border2);transform:translateY(-1px);}
-.kpi-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.3px;font-family:'DM Mono',monospace;margin-bottom:10px;}
-.kpi-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;color:var(--navy);}
+.kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.3px;font-family:var(--font-mono);margin-bottom:10px;}
+.kpi-value{font-family:var(--font-display);font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;color:var(--navy);}
 .kpi.blue .kpi-value{color:var(--blue2);}
 .kpi.teal .kpi-value{color:var(--teal);}
 .kpi.red .kpi-value{color:var(--red);}
@@ -59,51 +77,53 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
 .panel-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);}
-.panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--navy);}
-.panel-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}
+.panel-title{font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--navy);}
+.panel-sub{font-size:10px;color:var(--text3);font-family:var(--font-mono);}
 .panel-body{padding:18px;}
 
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .bar-label{font-size:11px;color:var(--text2);width:145px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bar-track{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;transition:width 0.9s cubic-bezier(0.4,0,0.2,1);}
-.bar-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);width:32px;text-align:right;}
+.bar-val{font-family:var(--font-mono);font-size:10px;color:var(--text3);width:32px;text-align:right;}
 
-.table-scroll{max-height:460px;overflow-y:auto;}
-.table-scroll::-webkit-scrollbar{width:4px;}
+.table-scroll{overflow-x:auto;width:100%;}
+#tab-shipments .panel{overflow:hidden;}
+#tab-shipments .table-wrap{overflow-x:auto;width:100%;}
+.table-scroll::-webkit-scrollbar{height:4px;width:4px;}
 .table-scroll::-webkit-scrollbar-track{background:var(--bg3);}
 .table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 .table-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;}
-th{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);position:sticky;top:0;z-index:2;}
+th{font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);position:sticky;top:0;z-index:2;}
 td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);white-space:nowrap;}
 tr:hover td{background:#f0f6ff;}
 tr:last-child td{border-bottom:none;}
-.mono{font-family:'DM Mono',monospace;}
+.mono{font-family:var(--font-mono);}
 
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:9px;font-family:'DM Mono',monospace;font-weight:500;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:9px;font-family:var(--font-mono);font-weight:500;}
 .badge-clean{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;}
 .badge-claim{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
 .badge-solved{background:#fef3c7;color:#b45309;border:1px solid #fde68a;}
 
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
-.fi{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+.fi{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;color:var(--text);font-family:var(--font-main);font-size:12px;outline:none;transition:border-color 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
 .fi:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(34,114,240,0.1);}
 .fi::placeholder{color:var(--text3);}
 select.fi{cursor:pointer;min-width:145px;}
-.result-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-left:auto;}
+.result-count{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-left:auto;}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(10,42,92,0.45);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:700px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(10,42,92,0.18);animation:slideUp 0.2s ease;}
 @keyframes slideUp{from{transform:translateY(14px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--navy);margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--blue4);}
+.modal-title{font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--navy);margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--blue4);}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.fg label{display:block;font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
-.fg input,.fg select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:all 0.15s;}
+.fg label{display:block;font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.fg input,.fg select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font-main);font-size:12px;outline:none;transition:all 0.15s;}
 .fg input:focus,.fg select:focus{border-color:var(--blue2);background:#fff;box-shadow:0 0 0 3px rgba(34,114,240,0.08);}
 .form-actions{display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-.btn{padding:9px 20px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;border:none;transition:all 0.15s;}
+.btn{padding:9px 20px;border-radius:8px;font-family:var(--font-display);font-weight:700;font-size:12px;cursor:pointer;border:none;transition:all 0.15s;}
 .btn-primary{background:var(--blue2);color:#fff;}
 .btn-primary:hover{background:var(--blue);}
 .btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
@@ -111,31 +131,30 @@ select.fi{cursor:pointer;min-width:145px;}
 
 .price-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .price-card{background:var(--blue3);border:1px solid var(--blue4);border-radius:10px;padding:16px;}
-.price-market{font-size:9px;color:var(--blue);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;}
-.price-val{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--navy);}
-.price-trend{font-size:10px;margin-top:5px;font-family:'DM Mono',monospace;}
+.price-market{font-size:9px;color:var(--blue);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;}
+.price-val{font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--navy);}
+.price-trend{font-size:10px;margin-top:5px;font-family:var(--font-mono);}
 .t-premium{color:var(--green);}
 .t-mid{color:var(--amber);}
 .t-low{color:var(--red);}
 
 .warning{background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:11px;color:var(--red);}
-
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:12px;z-index:500;transform:translateY(70px);opacity:0;transition:all 0.25s;box-shadow:0 8px 24px rgba(0,0,0,0.1);}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.success{border-color:#bbf7d0;color:var(--green);}
 .toast.error{border-color:#fecaca;color:var(--red);}
-
 .tab-panel{display:none;}
 .tab-panel.active{display:block;}
-
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
 .kpi{animation:fadeIn 0.3s ease both;}
 .kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.1s}.kpi:nth-child(3){animation-delay:.15s}.kpi:nth-child(4){animation-delay:.2s}.kpi:nth-child(5){animation-delay:.25s}
-
-.empty{text-align:center;padding:36px;color:var(--text3);font-size:12px;font-family:'DM Mono',monospace;}
+#tab-receivables .kpi-value{font-size:22px;}
+#tab-receivables .kpi-label{font-size:9px;}
 .del-btn{opacity:0;transition:opacity 0.15s;background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:3px 7px;border-radius:4px;}
 .del-btn:hover{background:#fee2e2;}
-tr:hover .del-btn{opacity:1;}
+.edit-btn{opacity:0;transition:opacity 0.15s;background:none;border:none;color:var(--blue2);cursor:pointer;font-size:12px;padding:3px 7px;border-radius:4px;margin-right:2px;}
+.edit-btn:hover{background:var(--blue3);}
+tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
 </style>
 </head>
 <body>
@@ -144,120 +163,270 @@ tr:hover .del-btn{opacity:1;}
 
 <div class="header">
   <div class="logo-wrap">
-    <div class="logo-icon">N</div>
+    <img src="logo.png" alt="Nile Establishment" style="height:38px;width:auto;filter:brightness(0) invert(1);flex-shrink:0;">
     <div>
-      <div class="logo-text">Nile Establishment</div>
-      <div class="logo-sub">Operations OS · Season 2025–26</div>
+      <div class="logo-text" data-en="Nile Establishment" data-ar="مؤسسة النيل">Nile Establishment</div>
+      <div class="logo-sub" data-en="Operations OS · Season 2025–26" data-ar="نظام العمليات · موسم ٢٠٢٥–٢٠٢٦">Operations OS · Season 2025–26</div>
     </div>
   </div>
   <div class="header-right">
-    <div class="live-badge"><div class="live-dot"></div>LIVE DATABASE</div>
-    <button class="btn-add" onclick="openModal()">+ Add Shipment</button>
+    <div class="live-badge"><div class="live-dot"></div><span data-en="LIVE DATABASE" data-ar="قاعدة بيانات مباشرة">LIVE DATABASE</span></div>
+    <button class="btn-lang" onclick="toggleLang()" id="langBtn">عربي</button>
+    <button class="btn-add" onclick="openModal()" data-en="+ Add Shipment" data-ar="+ إضافة شحنة">+ Add Shipment</button>
   </div>
 </div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <div class="modal-title">New Shipment Entry</div>
+    <div class="modal-title" data-en="New Shipment Entry" data-ar="إدخال شحنة جديدة">New Shipment Entry</div>
     <div class="form-grid">
-      <div class="fg"><label>Buyer *</label><input id="f-buyer" placeholder="e.g. SHANGHAI IVCSUN"></div>
-      <div class="fg"><label>Destination Port *</label><input id="f-pod" placeholder="e.g. SHANGHAI"></div>
-      <div class="fg"><label>Variety</label><select id="f-variety"><option>NAVEL</option><option>VALENCIA</option><option>BALADI PINEAPPLE</option><option>NAVEL-OT</option><option>VALENCIA - OT</option><option>NFC JUICE</option></select></div>
-      <div class="fg"><label>Class</label><select id="f-class"><option>CLASS 1</option><option>CLASS 2</option><option>INDUSTRIAL</option></select></div>
-      <div class="fg"><label>ETD</label><input id="f-etd" type="date"></div>
-      <div class="fg"><label>ETA</label><input id="f-eta" type="date"></div>
-      <div class="fg"><label>Vessel</label><input id="f-vessel" placeholder="e.g. KOTA SALAM"></div>
-      <div class="fg"><label>Shipping Line</label><select id="f-line"><option>PIL</option><option>MAERSK</option><option>CMA</option><option>MSC</option><option>WAN HAI</option><option>ONE</option><option>UNIFEEDER</option><option>ARKAS</option></select></div>
-      <div class="fg"><label>Price (USD / carton)</label><input id="f-price" type="number" step="0.01" placeholder="e.g. 9.50"></div>
-      <div class="fg"><label>Payment Terms</label><select id="f-terms"><option>FOB</option><option>CFR</option><option>CIF</option></select></div>
-      <div class="fg"><label>Container Numbers</label><input id="f-containers" placeholder="e.g. PCIU6139837"></div>
-      <div class="fg"><label>Booking Ref</label><input id="f-booking" placeholder="e.g. CAI500243900"></div>
-      <div class="fg"><label>Supplier</label><input id="f-supplier" value="NILE ESTABLISHMENT"></div>
-      <div class="fg"><label>Brand</label><input id="f-brand" placeholder="e.g. BGP"></div>
-      <div class="fg"><label>Claim Status</label><select id="f-claim"><option value="CLEAN">No Claim</option><option value="CLAIM">Claim — Open</option><option value="CLAIM-SOLVED">Claim — Solved</option><option value="CLAIM-BOTH">Claim — Shipping Line</option></select></div>
-      <div class="fg"><label>Notes</label><input id="f-notes" placeholder="Optional"></div>
+      <div class="fg"><label data-en="Buyer *" data-ar="المشتري *">Buyer *</label><input id="f-buyer" placeholder="e.g. SHANGHAI IVCSUN"></div>
+      <div class="fg"><label data-en="Destination Port *" data-ar="ميناء الوصول *">Destination Port *</label><input id="f-pod" placeholder="e.g. SHANGHAI"></div>
+      <div class="fg"><label data-en="Variety" data-ar="الصنف">Variety</label><select id="f-variety"><option>NAVEL</option><option>VALENCIA</option><option>BALADI PINEAPPLE</option><option>NAVEL-OT</option><option>VALENCIA - OT</option><option>NFC JUICE</option></select></div>
+      <div class="fg"><label data-en="Class" data-ar="الدرجة">Class</label><select id="f-class"><option>CLASS 1</option><option>CLASS 2</option><option>INDUSTRIAL</option></select></div>
+      <div class="fg"><label data-en="ETD" data-ar="تاريخ المغادرة">ETD</label><input id="f-etd" type="date"></div>
+      <div class="fg"><label data-en="ETA" data-ar="تاريخ الوصول">ETA</label><input id="f-eta" type="date"></div>
+      <div class="fg"><label data-en="Vessel" data-ar="السفينة">Vessel</label><input id="f-vessel" placeholder="e.g. KOTA SALAM"></div>
+      <div class="fg"><label data-en="Shipping Line" data-ar="شركة الشحن">Shipping Line</label><select id="f-line"><option>PIL</option><option>MAERSK</option><option>CMA</option><option>MSC</option><option>WAN HAI</option><option>ONE</option><option>UNIFEEDER</option><option>ARKAS</option><option>Hapag</option><option>Evergreen</option></select></div>
+      <div class="fg"><label data-en="Price — Sizes 72/80/88" data-ar="السعر — مقاسات ٧٢/٨٠/٨٨">Price — Sizes 72/80/88</label><input id="f-price" type="number" step="0.01" placeholder="e.g. 9.50"></div>
+      <div class="fg"><label data-en="Price — Size 100" data-ar="السعر — مقاس ١٠٠">Price — Size 100</label><input id="f-price100" type="number" step="0.01" placeholder="e.g. 6.50"></div>
+      <div class="fg"><label data-en="Payment Terms" data-ar="شروط الدفع">Payment Terms</label><select id="f-terms"><option>FOB</option><option>CFR</option><option>CIF</option></select></div>
+      <div class="fg"><label data-en="Container Numbers" data-ar="أرقام الحاويات">Container Numbers</label><input id="f-containers" placeholder="e.g. PCIU6139837"></div>
+      <div class="fg"><label data-en="Booking Ref" data-ar="رقم الحجز">Booking Ref</label><input id="f-booking" placeholder="e.g. ord. 36"></div>
+      <div class="fg"><label data-en="Supplier" data-ar="المورد">Supplier</label><input id="f-supplier" value="NILE ESTABLISHMENT"></div>
+      <div class="fg"><label data-en="Brand" data-ar="العلامة التجارية">Brand</label><input id="f-brand" placeholder="e.g. BGP"></div>
+      <div class="fg"><label data-en="Claim Status" data-ar="حالة المطالبة">Claim Status</label><select id="f-claim"><option value="CLEAN" data-en="No Claim" data-ar="لا توجد مطالبة">No Claim</option><option value="CLAIM" data-en="Claim — Open" data-ar="مطالبة — مفتوحة">Claim — Open</option><option value="CLAIM-SOLVED" data-en="Claim — Solved" data-ar="مطالبة — محلولة">Claim — Solved</option><option value="CLAIM-BOTH" data-en="Claim — Shipping Line" data-ar="مطالبة — شركة الشحن">Claim — Shipping Line</option></select></div>
+      <div class="fg"><label data-en="Notes" data-ar="ملاحظات">Notes</label><input id="f-notes" placeholder="Optional"></div>
     </div>
     <div class="form-actions">
-      <button class="btn btn-primary" onclick="saveShipment()">Save to Database</button>
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShipment()" data-en="Save to Database" data-ar="حفظ في قاعدة البيانات">Save to Database</button>
+      <button class="btn btn-ghost" onclick="closeModal()" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editOverlay" onclick="if(event.target===this)closeEdit()">
+  <div class="modal">
+    <div class="modal-title">Edit Shipment</div>
+    <input type="hidden" id="e-id">
+    <div class="form-grid">
+      <div class="fg"><label>Buyer *</label><input id="e-buyer"></div>
+      <div class="fg"><label>Destination Port *</label><input id="e-pod"></div>
+      <div class="fg"><label>Variety</label><select id="e-variety"><option>NAVEL</option><option>VALENCIA</option><option>BALADI PINEAPPLE</option><option>NAVEL-OT</option><option>VALENCIA - OT</option><option>NFC JUICE</option></select></div>
+      <div class="fg"><label>Class</label><select id="e-class"><option>CLASS 1</option><option>CLASS 2</option><option>INDUSTRIAL</option></select></div>
+      <div class="fg"><label>ETD</label><input id="e-etd" type="date"></div>
+      <div class="fg"><label>ETA</label><input id="e-eta" type="date"></div>
+      <div class="fg"><label>Vessel</label><input id="e-vessel"></div>
+      <div class="fg"><label>Shipping Line</label><select id="e-line"><option>PIL</option><option>MAERSK</option><option>CMA</option><option>MSC</option><option>WAN HAI</option><option>ONE</option><option>UNIFEEDER</option><option>ARKAS</option><option>Hapag</option><option>Evergreen</option></select></div>
+      <div class="fg"><label>Price — Sizes 72/80/88</label><input id="e-price" type="number" step="0.01"></div>
+      <div class="fg"><label>Price — Size 100</label><input id="e-price100" type="number" step="0.01"></div>
+      <div class="fg"><label>Payment Terms</label><select id="e-terms"><option>FOB</option><option>CFR</option><option>CIF</option></select></div>
+      <div class="fg"><label>Container Numbers</label><input id="e-containers"></div>
+      <div class="fg"><label>Booking Ref</label><input id="e-booking"></div>
+      <div class="fg"><label>Supplier</label><input id="e-supplier"></div>
+      <div class="fg"><label>Brand</label><input id="e-brand"></div>
+      <div class="fg"><label>Ref / PEF No.</label><input id="e-ref"></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label style="display:block;font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Claim Status</label>
+      <select id="e-claim" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font-main);font-size:12px;outline:none;">
+        <option value="CLEAN">No Claim</option>
+        <option value="CLAIM">Claim — Open</option>
+        <option value="CLAIM-SOLVED">Claim — Solved</option>
+        <option value="CLAIM-BOTH">Claim — Shipping Line</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label style="display:block;font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Shipment Status | حالة الشحنة</label>
+      <select id="e-shipstatus" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font-main);font-size:12px;outline:none;">
+        <option value="Pending">Pending — معلقة</option>
+        <option value="Loaded">Loaded — محملة</option>
+        <option value="Arrived">Arrived — وصلت</option>
+        <option value="Settled">Settled — مسواة</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label style="display:block;font-size:9px;color:var(--text3);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Notes</label>
+      <input id="e-notes" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-family:var(--font-main);font-size:12px;outline:none;">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="updateShipment()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="closeEdit()">Cancel</button>
     </div>
   </div>
 </div>
 
 <div class="container">
   <div class="tabs">
-    <button class="tab active" onclick="showTab('overview',this)">Overview</button>
-    <button class="tab" onclick="showTab('shipments',this)">Shipments</button>
-    <button class="tab" onclick="showTab('claims',this)">Claims</button>
-    <button class="tab" onclick="showTab('buyers',this)">Buyers</button>
-    <button class="tab" onclick="showTab('markets',this)">Markets</button>
+    <button class="tab active" onclick="showTab('overview',this)" data-en="Overview" data-ar="نظرة عامة">Overview</button>
+    <button class="tab" onclick="showTab('shipments',this)" data-en="Shipments" data-ar="الشحنات">Shipments</button>
+    <button class="tab" onclick="showTab('claims',this)" data-en="Claims" data-ar="المطالبات">Claims</button>
+    <button class="tab" onclick="showTab('buyers',this)" data-en="Buyers" data-ar="المشترون">Buyers</button>
+    <button class="tab" onclick="showTab('markets',this)" data-en="Markets" data-ar="الأسواق">Markets</button>
+    <button class="tab" onclick="showTab('receivables',this)" data-en="Receivables" data-ar="المستحقات">Receivables</button>
   </div>
 
+  <!-- OVERVIEW -->
   <div class="tab-panel active" id="tab-overview">
     <div class="kpi-grid">
-      <div class="kpi blue"><div class="kpi-label">Total Shipments</div><div class="kpi-value" id="k-total">—</div><div class="kpi-sub">This season</div></div>
-      <div class="kpi teal"><div class="kpi-label">Active Buyers</div><div class="kpi-value" id="k-buyers">—</div><div class="kpi-sub">Unique accounts</div></div>
-      <div class="kpi blue"><div class="kpi-label">Destinations</div><div class="kpi-value" id="k-pods">—</div><div class="kpi-sub">Active ports</div></div>
-      <div class="kpi red"><div class="kpi-label">Open Claims</div><div class="kpi-value" id="k-claims">—</div><div class="kpi-sub">Need action</div></div>
-      <div class="kpi green"><div class="kpi-label">Avg Price</div><div class="kpi-value" id="k-price">—</div><div class="kpi-sub">USD / carton (fresh)</div></div>
+      <div class="kpi blue"><div class="kpi-label" data-en="Total Shipments" data-ar="إجمالي الشحنات">Total Shipments</div><div class="kpi-value" id="k-total">—</div><div class="kpi-sub" data-en="This season" data-ar="هذا الموسم">This season</div></div>
+      <div class="kpi teal"><div class="kpi-label" data-en="Active Buyers" data-ar="المشترون النشطون">Active Buyers</div><div class="kpi-value" id="k-buyers">—</div><div class="kpi-sub" data-en="Unique accounts" data-ar="حسابات فريدة">Unique accounts</div></div>
+      <div class="kpi blue"><div class="kpi-label" data-en="Destinations" data-ar="الوجهات">Destinations</div><div class="kpi-value" id="k-pods">—</div><div class="kpi-sub" data-en="Active ports" data-ar="موانئ نشطة">Active ports</div></div>
+      <div class="kpi red"><div class="kpi-label" data-en="Open Claims" data-ar="مطالبات مفتوحة">Open Claims</div><div class="kpi-value" id="k-claims">—</div><div class="kpi-sub" data-en="Need action" data-ar="تحتاج إجراء">Need action</div></div>
+      <div class="kpi green"><div class="kpi-label" data-en="Avg Price" data-ar="متوسط السعر">Avg Price</div><div class="kpi-value" id="k-price">—</div><div class="kpi-sub" data-en="USD / carton (fresh)" data-ar="دولار / كرتون (طازج)">USD / carton (fresh)</div></div>
     </div>
     <div class="grid-2">
-      <div class="panel"><div class="panel-header"><div class="panel-title">Buyer Volume</div><div class="panel-sub">Shipments by account</div></div><div class="panel-body" id="buyer-bars"></div></div>
-      <div class="panel"><div class="panel-header"><div class="panel-title">Destination Ports</div><div class="panel-sub">Shipments by market</div></div><div class="panel-body" id="pod-bars"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Buyer Volume" data-ar="حجم المشترين">Buyer Volume</div><div class="panel-sub" data-en="Shipments by account" data-ar="شحنات حسب الحساب">Shipments by account</div></div><div class="panel-body" id="buyer-bars"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Destination Ports" data-ar="موانئ الوصول">Destination Ports</div><div class="panel-sub" data-en="Shipments by market" data-ar="شحنات حسب السوق">Shipments by market</div></div><div class="panel-body" id="pod-bars"></div></div>
     </div>
     <div class="grid-3">
-      <div class="panel"><div class="panel-header"><div class="panel-title">Product Mix</div></div><div class="panel-body" id="variety-bars"></div></div>
-      <div class="panel"><div class="panel-header"><div class="panel-title">Shipping Lines</div></div><div class="panel-body" id="line-bars"></div></div>
-      <div class="panel"><div class="panel-header"><div class="panel-title">Claim Overview</div></div><div class="panel-body" id="claim-bars"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Product Mix" data-ar="مزيج المنتجات">Product Mix</div></div><div class="panel-body" id="variety-bars"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Shipping Lines" data-ar="شركات الشحن">Shipping Lines</div></div><div class="panel-body" id="line-bars"></div></div>
+      <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Claim Overview" data-ar="نظرة على المطالبات">Claim Overview</div></div><div class="panel-body" id="claim-bars"></div></div>
     </div>
-    <div class="panel"><div class="panel-header"><div class="panel-title">Average Price by Destination</div><div class="panel-sub">USD per carton — fresh shipments only</div></div><div class="panel-body"><div class="price-grid" id="price-by-market"></div></div></div>
+    <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Average Price by Destination" data-ar="متوسط السعر حسب الوجهة">Average Price by Destination</div><div class="panel-sub" data-en="USD per carton — fresh only" data-ar="دولار للكرتون — طازج فقط">USD per carton — fresh only</div></div><div class="panel-body"><div class="price-grid" id="price-by-market"></div></div></div>
   </div>
 
+  <!-- SHIPMENTS -->
   <div class="tab-panel" id="tab-shipments">
     <div class="filters">
       <input class="fi" id="s-search" placeholder="Search buyer..." oninput="renderShipments()">
-      <select class="fi" id="s-pod" onchange="renderShipments()"><option value="">All Destinations</option></select>
-      <select class="fi" id="s-variety" onchange="renderShipments()"><option value="">All Varieties</option></select>
-      <select class="fi" id="s-line" onchange="renderShipments()"><option value="">All Lines</option></select>
-      <select class="fi" id="s-claim" onchange="renderShipments()"><option value="">All Statuses</option><option value="CLEAN">Clean only</option><option value="CLAIM">Has claim</option></select>
+      <select class="fi" id="s-pod" onchange="renderShipments()"><option value="" data-en="All Destinations" data-ar="كل الوجهات">All Destinations</option></select>
+      <select class="fi" id="s-variety" onchange="renderShipments()"><option value="" data-en="All Varieties" data-ar="كل الأصناف">All Varieties</option></select>
+      <select class="fi" id="s-line" onchange="renderShipments()"><option value="" data-en="All Lines" data-ar="كل شركات الشحن">All Lines</option></select>
+      <select class="fi" id="s-status" onchange="renderShipments()">
+        <option value="" data-en="All Statuses" data-ar="كل الحالات">All Statuses</option>
+        <option value="Pending" data-en="Pending" data-ar="معلقة">Pending</option>
+        <option value="Loaded" data-en="Loaded" data-ar="محملة">Loaded</option>
+        <option value="Arrived" data-en="Arrived" data-ar="وصلت">Arrived</option>
+        <option value="Settled" data-en="Settled" data-ar="مسواة">Settled</option>
+      </select>
+      <select class="fi" id="s-week" onchange="renderShipments()"><option value="" data-en="All Weeks" data-ar="كل الأسابيع">All Weeks</option></select>
+      <select class="fi" id="s-claim" onchange="renderShipments()">
+        <option value="" data-en="All Claims" data-ar="كل المطالبات">All Claims</option>
+        <option value="CLEAN" data-en="No Claim" data-ar="بدون مطالبة">No Claim</option>
+        <option value="CLAIM" data-en="Has Claim" data-ar="لديها مطالبة">Has Claim</option>
+      </select>
       <span class="result-count" id="s-count"></span>
     </div>
     <div class="panel"><div class="table-scroll"><div class="table-wrap">
-      <table><thead><tr><th>Ref</th><th>Buyer</th><th>Variety</th><th>Class</th><th>Port</th><th>ETD</th><th>ETA</th><th>Vessel</th><th>Line</th><th>Price</th><th>Terms</th><th>Claim</th><th></th></tr></thead>
-      <tbody id="s-tbody"></tbody></table>
+      <table>
+        <thead><tr>
+          <th data-en="Week" data-ar="الأسبوع">Week</th>
+          <th data-en="Ref" data-ar="المرجع">Ref</th>
+          <th data-en="Buyer" data-ar="المشتري">Buyer</th>
+          <th data-en="Variety" data-ar="الصنف">Variety</th>
+          <th data-en="Class" data-ar="الدرجة">Class</th>
+          <th data-en="Port" data-ar="الميناء">Port</th>
+          <th data-en="ETD" data-ar="تاريخ المغادرة">ETD</th>
+          <th data-en="ETA" data-ar="تاريخ الوصول">ETA</th>
+          <th data-en="Vessel" data-ar="السفينة">Vessel</th>
+          <th data-en="Line" data-ar="الشركة">Line</th>
+          <th data-en="Price 72-88" data-ar="سعر ٧٢-٨٨">Price 72-88</th>
+          <th data-en="Price 100" data-ar="سعر ١٠٠">Price 100</th>
+          <th data-en="Terms" data-ar="الشروط">Terms</th>
+          <th data-en="Status" data-ar="الحالة">Status</th>
+          <th data-en="Claim" data-ar="المطالبة">Claim</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="s-tbody"></tbody>
+      </table>
     </div></div></div>
   </div>
 
+  <!-- CLAIMS -->
   <div class="tab-panel" id="tab-claims">
     <div class="kpi-grid">
-      <div class="kpi red"><div class="kpi-label">Open Claims</div><div class="kpi-value" id="c-open">—</div><div class="kpi-sub">Need resolution</div></div>
-      <div class="kpi gold"><div class="kpi-label">Solved</div><div class="kpi-value" id="c-solved">—</div><div class="kpi-sub">This season</div></div>
-      <div class="kpi teal"><div class="kpi-label">Shipping Line</div><div class="kpi-value" id="c-line">—</div><div class="kpi-sub">Line liability</div></div>
-      <div class="kpi blue"><div class="kpi-label">Total Claims</div><div class="kpi-value" id="c-total">—</div><div class="kpi-sub">All types</div></div>
-      <div class="kpi green"><div class="kpi-label">Clean Rate</div><div class="kpi-value" id="c-rate">—</div><div class="kpi-sub">No claim shipments</div></div>
+      <div class="kpi red"><div class="kpi-label" data-en="Open Claims" data-ar="مطالبات مفتوحة">Open Claims</div><div class="kpi-value" id="c-open">—</div><div class="kpi-sub" data-en="Need resolution" data-ar="تحتاج حل">Need resolution</div></div>
+      <div class="kpi gold"><div class="kpi-label" data-en="Solved" data-ar="محلولة">Solved</div><div class="kpi-value" id="c-solved">—</div><div class="kpi-sub" data-en="This season" data-ar="هذا الموسم">This season</div></div>
+      <div class="kpi teal"><div class="kpi-label" data-en="Shipping Line" data-ar="شركة الشحن">Shipping Line</div><div class="kpi-value" id="c-line">—</div><div class="kpi-sub" data-en="Line liability" data-ar="مسؤولية الشركة">Line liability</div></div>
+      <div class="kpi blue"><div class="kpi-label" data-en="Total Claims" data-ar="إجمالي المطالبات">Total Claims</div><div class="kpi-value" id="c-total">—</div><div class="kpi-sub" data-en="All types" data-ar="جميع الأنواع">All types</div></div>
+      <div class="kpi green"><div class="kpi-label" data-en="Clean Rate" data-ar="معدل النظافة">Clean Rate</div><div class="kpi-value" id="c-rate">—</div><div class="kpi-sub" data-en="No claim shipments" data-ar="شحنات بلا مطالبات">No claim shipments</div></div>
     </div>
-    <div class="panel"><div class="panel-header"><div class="panel-title">All Claim Records</div></div>
+    <div class="panel"><div class="panel-header"><div class="panel-title" data-en="All Claim Records" data-ar="سجلات المطالبات">All Claim Records</div></div>
     <div class="table-scroll"><div class="table-wrap">
-      <table><thead><tr><th>Buyer</th><th>Variety</th><th>Port</th><th>ETD</th><th>Line</th><th>Price</th><th>Status</th><th>Ref</th></tr></thead>
+      <table><thead><tr>
+        <th data-en="Buyer" data-ar="المشتري">Buyer</th>
+        <th data-en="Variety" data-ar="الصنف">Variety</th>
+        <th data-en="Port" data-ar="الميناء">Port</th>
+        <th data-en="ETD" data-ar="تاريخ المغادرة">ETD</th>
+        <th data-en="Line" data-ar="الشركة">Line</th>
+        <th data-en="Price" data-ar="السعر">Price</th>
+        <th data-en="Status" data-ar="الحالة">Status</th>
+        <th data-en="Ref" data-ar="المرجع">Ref</th>
+      </tr></thead>
       <tbody id="c-tbody"></tbody></table>
     </div></div></div>
   </div>
 
+  <!-- BUYERS -->
   <div class="tab-panel" id="tab-buyers">
     <div class="warning" id="conc-warning" style="display:none"><span>⚠</span><span id="conc-text"></span></div>
     <div class="panel"><div class="table-wrap">
-      <table><thead><tr><th>Buyer</th><th>Shipments</th><th>Share</th><th>Primary Port</th><th>Varieties</th><th>Avg Price</th><th>Claims</th></tr></thead>
+      <table><thead><tr>
+        <th data-en="Buyer" data-ar="المشتري">Buyer</th>
+        <th data-en="Shipments" data-ar="الشحنات">Shipments</th>
+        <th data-en="Share" data-ar="الحصة">Share</th>
+        <th data-en="Primary Port" data-ar="الميناء الرئيسي">Primary Port</th>
+        <th data-en="Varieties" data-ar="الأصناف">Varieties</th>
+        <th data-en="Avg Price" data-ar="متوسط السعر">Avg Price</th>
+        <th data-en="Claims" data-ar="المطالبات">Claims</th>
+      </tr></thead>
       <tbody id="b-tbody"></tbody></table>
     </div></div>
   </div>
 
+  <!-- MARKETS -->
   <div class="tab-panel" id="tab-markets">
     <div class="panel"><div class="table-wrap">
-      <table><thead><tr><th>Port</th><th>Shipments</th><th>Share</th><th>Top Buyer</th><th>Avg Price</th><th>Varieties</th><th>Lines</th></tr></thead>
+      <table><thead><tr>
+        <th data-en="Port" data-ar="الميناء">Port</th>
+        <th data-en="Shipments" data-ar="الشحنات">Shipments</th>
+        <th data-en="Share" data-ar="الحصة">Share</th>
+        <th data-en="Top Buyer" data-ar="أكبر مشترٍ">Top Buyer</th>
+        <th data-en="Avg Price" data-ar="متوسط السعر">Avg Price</th>
+        <th data-en="Varieties" data-ar="الأصناف">Varieties</th>
+        <th data-en="Lines" data-ar="شركات الشحن">Lines</th>
+      </tr></thead>
       <tbody id="m-tbody"></tbody></table>
     </div></div>
   </div>
+
+  <!-- RECEIVABLES -->
+  <div class="tab-panel" id="tab-receivables">
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="kpi-label" data-en="Total Outstanding" data-ar="إجمالي المستحق">Total Outstanding</div><div class="kpi-value" id="r-total">—</div><div class="kpi-sub" data-en="USD owed to Nile Est." data-ar="دولار مستحق لمؤسسة النيل">USD owed to Nile Est.</div></div>
+      <div class="kpi gold"><div class="kpi-label" data-en="Total Invoiced" data-ar="إجمالي الفواتير">Total Invoiced</div><div class="kpi-value" id="r-invoiced">—</div><div class="kpi-sub" data-en="This season" data-ar="هذا الموسم">This season</div></div>
+      <div class="kpi green"><div class="kpi-label" data-en="Total Collected" data-ar="إجمالي المحصّل">Total Collected</div><div class="kpi-value" id="r-collected">—</div><div class="kpi-sub" data-en="Payments received" data-ar="المدفوعات المستلمة">Payments received</div></div>
+      <div class="kpi blue"><div class="kpi-label" data-en="Collection Rate" data-ar="معدل التحصيل">Collection Rate</div><div class="kpi-value" id="r-rate">—</div><div class="kpi-sub" data-en="% of invoiced value paid" data-ar="% من قيمة الفواتير المدفوعة">% of invoiced value paid</div></div>
+      <div class="kpi teal"><div class="kpi-label" data-en="Total Containers" data-ar="إجمالي الحاويات">Total Containers</div><div class="kpi-value" id="r-ctns">—</div><div class="kpi-sub" data-en="Season total" data-ar="إجمالي الموسم">Season total</div></div>
+    </div>
+    <div class="grid-3" id="r-group-cards"></div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title" data-en="All Client Balances" data-ar="أرصدة جميع العملاء">All Client Balances</div>
+        <div class="panel-sub" data-en="Outstanding balances by client" data-ar="الأرصدة المستحقة لكل عميل">Outstanding balances by client</div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th data-en="Client" data-ar="العميل">Client</th>
+          <th data-en="Group" data-ar="المجموعة">Group</th>
+          <th data-en="Type" data-ar="النوع">Type</th>
+          <th data-en="Containers" data-ar="الحاويات">Containers</th>
+          <th data-en="Invoiced" data-ar="الفواتير">Invoiced</th>
+          <th data-en="Paid" data-ar="المدفوع">Paid</th>
+          <th data-en="Credits" data-ar="الائتمانات">Credits</th>
+          <th data-en="Balance" data-ar="الرصيد">Balance</th>
+          <th data-en="Status" data-ar="الحالة">Status</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="r-tbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -265,36 +434,66 @@ const SURL='https://izdumvyiacyueidyxfww.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6ZHVtdnlpYWN5dWVpZHl4Znd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTY2ODEsImV4cCI6MjA5Mjg5MjY4MX0.E049kmKn0-9b27t45iGfquxYYq2Fo0rBd7zO3Doa4SI';
 const db=supabase.createClient(SURL,SKEY);
 let DATA=[];
+let LANG='en';
 
+// ── LANGUAGE ──────────────────────────────────────
+function toggleLang(){
+  LANG=LANG==='en'?'ar':'en';
+  const html=document.documentElement;
+  html.setAttribute('lang',LANG);
+  html.setAttribute('dir',LANG==='ar'?'rtl':'ltr');
+  document.getElementById('langBtn').textContent=LANG==='en'?'عربي':'English';
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    el.textContent=LANG==='ar'?el.dataset.ar:el.dataset.en;
+  });
+  document.getElementById('s-search').placeholder=LANG==='ar'?'ابحث عن مشترٍ...':'Search buyer...';
+  renderAll();
+}
+
+function t(en,ar){return LANG==='ar'?ar:en;}
+
+// ── HELPERS ────────────────────────────────────────
 const ct=c=>{if(!c||c==='CLEAN')return'CLEAN';if(c.includes('SOLVED'))return'SOLVED';return'OPEN';};
-const cb=c=>{const t=ct(c);if(t==='CLEAN')return`<span class="badge badge-clean">✓ Clean</span>`;if(t==='SOLVED')return`<span class="badge badge-solved">⚡ Solved</span>`;return`<span class="badge badge-claim">⚠ Open</span>`;};
+const cb=c=>{
+  const tp=ct(c);
+  if(tp==='CLEAN')return`<span class="badge badge-clean">${t('✓ Clean','✓ نظيف')}</span>`;
+  if(tp==='SOLVED')return`<span class="badge badge-solved">${t('⚡ Solved','⚡ محلول')}</span>`;
+  return`<span class="badge badge-claim">${t('⚠ Open','⚠ مفتوح')}</span>`;
+};
 const fp=p=>p&&!isNaN(p)?'$'+parseFloat(p).toFixed(2):'—';
 const avg=a=>{const v=a.filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;};
 const COLS=['#2272f0','#0891b2','#7c3aed','#16a34a','#d97706','#dc2626','#b45309'];
 const col=i=>COLS[i%COLS.length];
 
 function bars(entries,el){
-  if(!entries.length){el.innerHTML='<div class="empty">No data</div>';return;}
+  if(!entries.length){el.innerHTML=`<div class="empty">${t('No data','لا توجد بيانات')}</div>`;return;}
   const mx=entries[0][1];
-  el.innerHTML=entries.map(([n,v],i)=>`<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${v/mx*100}%;background:${col(i)}"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  el.innerHTML=entries.map(([n,v],i)=>`
+    <div class="bar-row">
+      <div class="bar-label" title="${n}">${n}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/mx*100}%;background:${col(i)}"></div></div>
+      <div class="bar-val">${v}</div>
+    </div>`).join('');
 }
 
 function toast(msg,type='success'){
-  const t=document.getElementById('toast');
-  t.textContent=(type==='success'?'✓ ':'✕ ')+msg;
-  t.className=`toast show ${type}`;
-  setTimeout(()=>t.classList.remove('show'),3000);
+  const el=document.getElementById('toast');
+  el.textContent=(type==='success'?'✓ ':'✕ ')+msg;
+  el.className=`toast show ${type}`;
+  setTimeout(()=>el.classList.remove('show'),3000);
 }
 
+// ── LOAD ───────────────────────────────────────────
 async function loadData(){
   try{
     const{data,error}=await db.from('shipments').select('*').order('etd',{ascending:true});
     if(error)throw error;
     DATA=data||[];
     renderAll();
-  }catch(e){toast('Connection error: '+e.message,'error');console.error(e);}
+  }catch(e){toast(t('Connection error: ','خطأ في الاتصال: ')+e.message,'error');console.error(e);}
 }
 
+// ── OVERVIEW ───────────────────────────────────────
 function renderOverview(){
   const total=DATA.length;
   const buyers=new Set(DATA.map(d=>d.buyer)).size;
@@ -313,7 +512,12 @@ function renderOverview(){
   const top=Object.entries(bc).sort((a,b)=>b[1]-a[1])[0];
   const pct=top?(top[1]/total*100).toFixed(0):0;
   const cw=document.getElementById('conc-warning');
-  if(pct>15){cw.style.display='flex';document.getElementById('conc-text').textContent=`${top[0]} is ${pct}% of all shipments — concentration risk. Target: no single buyer above 20%.`;}
+  if(pct>15){
+    cw.style.display='flex';
+    document.getElementById('conc-text').textContent=
+      t(`${top[0]} is ${pct}% of all shipments — concentration risk. Target: no single buyer above 20%.`,
+        `${top[0]} يمثل ${pct}٪ من جميع الشحنات — خطر التركيز. الهدف: ألا يتجاوز أي مشترٍ ٢٠٪.`);
+  }
 
   const pc={};DATA.forEach(d=>{pc[d.pod]=(pc[d.pod]||0)+1;});
   bars(Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,8),document.getElementById('pod-bars'));
@@ -324,34 +528,47 @@ function renderOverview(){
   const lc={};DATA.forEach(d=>{if(d.shipping_line)lc[d.shipping_line]=(lc[d.shipping_line]||0)+1;});
   bars(Object.entries(lc).sort((a,b)=>b[1]-a[1]),document.getElementById('line-bars'));
 
-  const cc={Clean:0,Open:0,Solved:0};
-  DATA.forEach(d=>{const t=ct(d.claim_status);if(t==='CLEAN')cc.Clean++;else if(t==='OPEN')cc.Open++;else cc.Solved++;});
+  const cc={[t('Clean','نظيف')]:0,[t('Open','مفتوح')]:0,[t('Solved','محلول')]:0};
+  DATA.forEach(d=>{const tp=ct(d.claim_status);if(tp==='CLEAN')cc[t('Clean','نظيف')]++;else if(tp==='OPEN')cc[t('Open','مفتوح')]++;else cc[t('Solved','محلول')]++;});
   const cc_colors=['#16a34a','#dc2626','#d97706'];
   const mxC=Math.max(...Object.values(cc));
-  document.getElementById('claim-bars').innerHTML=Object.entries(cc).map(([n,v],i)=>`<div class="bar-row"><div class="bar-label">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${mxC?v/mxC*100:0}%;background:${cc_colors[i]}"></div></div><div class="bar-val">${v}</div></div>`).join('');
+  document.getElementById('claim-bars').innerHTML=Object.entries(cc).map(([n,v],i)=>`
+    <div class="bar-row">
+      <div class="bar-label">${n}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${mxC?v/mxC*100:0}%;background:${cc_colors[i]}"></div></div>
+      <div class="bar-val">${v}</div>
+    </div>`).join('');
 
   const pm={};DATA.forEach(d=>{if(!pm[d.pod])pm[d.pod]={prices:[],count:0};pm[d.pod].count++;const p=parseFloat(d.price);if(!isNaN(p)&&p>2)pm[d.pod].prices.push(p);});
   document.getElementById('price-by-market').innerHTML=Object.entries(pm).sort((a,b)=>b[1].count-a[1].count).slice(0,8).map(([pod,m])=>{
-    const a=avg(m.prices);const cls=a>9?'t-premium':a>7?'t-mid':'t-low';const lbl=a>9?'▲ Premium':a>7?'◆ Mid-range':'▼ Suppressed';
+    const a=avg(m.prices);
+    const cls=a>9?'t-premium':a>7?'t-mid':'t-low';
+    const lbl=a>9?t('▲ Premium','▲ ممتاز'):a>7?t('◆ Mid-range','◆ متوسط'):t('▼ Suppressed','▼ منخفض');
     return`<div class="price-card"><div class="price-market">${pod}</div><div class="price-val">${fp(a)}</div><div class="price-trend ${cls}">${lbl}</div></div>`;
   }).join('');
 }
 
+// ── FILTERS ────────────────────────────────────────
 function populateFilters(){
   const pods=[...new Set(DATA.map(d=>d.pod).filter(Boolean))].sort();
   const vars=[...new Set(DATA.map(d=>(d.variety||'').trim()).filter(Boolean))].sort();
   const lines=[...new Set(DATA.map(d=>d.shipping_line).filter(Boolean))].sort();
-  document.getElementById('s-pod').innerHTML='<option value="">All Destinations</option>'+pods.map(p=>`<option>${p}</option>`).join('');
-  document.getElementById('s-variety').innerHTML='<option value="">All Varieties</option>'+vars.map(v=>`<option>${v}</option>`).join('');
-  document.getElementById('s-line').innerHTML='<option value="">All Lines</option>'+lines.map(l=>`<option>${l}</option>`).join('');
+  const weeks=[...new Set(DATA.map(d=>d.season_week).filter(Boolean))].sort((a,b)=>a-b);
+  document.getElementById('s-pod').innerHTML=`<option value="">${t('All Destinations','كل الوجهات')}</option>`+pods.map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('s-variety').innerHTML=`<option value="">${t('All Varieties','كل الأصناف')}</option>`+vars.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('s-line').innerHTML=`<option value="">${t('All Lines','كل شركات الشحن')}</option>`+lines.map(l=>`<option>${l}</option>`).join('');
+  document.getElementById('s-week').innerHTML=`<option value="">${t('All Weeks','كل الأسابيع')}</option>`+weeks.map(w=>`<option value="${w}">${t('Week','أسبوع')} ${w}</option>`).join('');
 }
 
+// ── SHIPMENTS ──────────────────────────────────────
 function renderShipments(){
   const search=(document.getElementById('s-search')?.value||'').toLowerCase();
   const pod=document.getElementById('s-pod')?.value||'';
   const variety=document.getElementById('s-variety')?.value||'';
   const line=document.getElementById('s-line')?.value||'';
   const cf=document.getElementById('s-claim')?.value||'';
+  const sf=document.getElementById('s-status')?.value||'';
+  const wf=document.getElementById('s-week')?.value||'';
   const f=DATA.filter(d=>{
     if(search&&!(d.buyer||'').toLowerCase().includes(search))return false;
     if(pod&&d.pod!==pod)return false;
@@ -359,11 +576,23 @@ function renderShipments(){
     if(line&&d.shipping_line!==line)return false;
     if(cf==='CLEAN'&&ct(d.claim_status)!=='CLEAN')return false;
     if(cf==='CLAIM'&&ct(d.claim_status)==='CLEAN')return false;
+    if(sf&&d.shipment_status!==sf)return false;
+    if(wf&&String(d.season_week)!==String(wf))return false;
     return true;
   });
-  document.getElementById('s-count').textContent=`${f.length} shipments`;
+  document.getElementById('s-count').textContent=`${f.length} ${t('shipments','شحنة')}`;
+
+  const shipStatusBadge=s=>{
+    if(!s||s==='Pending') return`<span class="badge" style="background:#eff6ff;color:var(--blue2);border:1px solid var(--blue4)">${t('Pending','معلقة')}</span>`;
+    if(s==='Loaded') return`<span class="badge badge-clean">${t('✓ Loaded','✓ محملة')}</span>`;
+    if(s==='Arrived') return`<span class="badge" style="background:#f0fdf4;color:var(--green);border:1px solid #bbf7d0">${t('Arrived','وصلت')}</span>`;
+    if(s==='Settled') return`<span class="badge" style="background:#fef3c7;color:var(--amber);border:1px solid #fde68a">${t('Settled','مسواة')}</span>`;
+    return`<span class="badge badge-clean">${s}</span>`;
+  };
+
   document.getElementById('s-tbody').innerHTML=f.map(d=>`
     <tr>
+      <td class="mono" style="color:var(--text3);font-size:10px">${d.season_week?`W${d.season_week}`:'—'}</td>
       <td class="mono" style="font-size:10px;color:var(--text3)">${d.ref||'—'}</td>
       <td style="color:var(--navy);font-weight:600">${d.buyer}</td>
       <td>${(d.variety||'').trim()}</td>
@@ -374,12 +603,18 @@ function renderShipments(){
       <td style="color:var(--text3)">${d.vessel||'—'}</td>
       <td>${d.shipping_line||'—'}</td>
       <td class="mono" style="color:var(--blue);font-weight:600">${fp(d.price)}</td>
+      <td class="mono" style="color:var(--teal);font-weight:600">${fp(d.price_100)}</td>
       <td style="color:var(--text3)">${d.payment_terms||'—'}</td>
+      <td>${shipStatusBadge(d.shipment_status)}</td>
       <td>${cb(d.claim_status)}</td>
-      <td><button class="del-btn" onclick="deleteSh('${d.id}')">✕</button></td>
+      <td style="white-space:nowrap">
+        <button class="edit-btn" onclick="openEdit('${d.id}')">✎</button>
+        <button class="del-btn" onclick="deleteSh('${d.id}')">✕</button>
+      </td>
     </tr>`).join('');
 }
 
+// ── CLAIMS ─────────────────────────────────────────
 function renderClaims(){
   const all=DATA.filter(d=>ct(d.claim_status)!=='CLEAN');
   document.getElementById('c-open').textContent=all.filter(d=>ct(d.claim_status)==='OPEN').length;
@@ -397,9 +632,10 @@ function renderClaims(){
       <td class="mono" style="color:var(--blue);font-weight:600">${fp(d.price)}</td>
       <td>${cb(d.claim_status)}</td>
       <td class="mono" style="font-size:10px;color:var(--text3)">${d.ref||'—'}</td>
-    </tr>`).join(''):`<tr><td colspan="8"><div class="empty">No claims on record</div></td></tr>`;
+    </tr>`).join(''):`<tr><td colspan="8"><div class="empty">${t('No claims on record','لا توجد مطالبات مسجلة')}</div></td></tr>`;
 }
 
+// ── BUYERS ─────────────────────────────────────────
 function renderBuyers(){
   const bm={};
   DATA.forEach(d=>{
@@ -419,10 +655,11 @@ function renderBuyers(){
       <td style="color:var(--blue2)">${b.pods[0]||'—'}</td>
       <td style="color:var(--text3);font-size:11px">${b.varieties.slice(0,2).join(', ')}</td>
       <td class="mono" style="color:var(--blue);font-weight:600">${fp(avg(b.prices))}</td>
-      <td>${b.hasClaim?'<span class="badge badge-claim">⚠ Yes</span>':'<span class="badge badge-clean">✓ No</span>'}</td>
+      <td>${b.hasClaim?`<span class="badge badge-claim">⚠ ${t('Yes','نعم')}</span>`:`<span class="badge badge-clean">✓ ${t('No','لا')}</span>`}</td>
     </tr>`).join('');
 }
 
+// ── MARKETS ────────────────────────────────────────
 function renderMarkets(){
   const mm={};
   DATA.forEach(d=>{
@@ -436,14 +673,23 @@ function renderMarkets(){
   const total=DATA.length;
   document.getElementById('m-tbody').innerHTML=Object.entries(mm).sort((a,b)=>b[1].count-a[1].count).map(([pod,m])=>{
     const topB=Object.entries(m.buyers).sort((a,b)=>b[1]-a[1])[0][0];
-    return`<tr><td style="color:var(--navy);font-weight:600">${pod}</td><td class="mono">${m.count}</td><td class="mono" style="color:var(--text3)">${(m.count/total*100).toFixed(0)}%</td><td>${topB}</td><td class="mono" style="color:var(--blue);font-weight:600">${fp(avg(m.prices))}</td><td style="color:var(--text3);font-size:11px">${m.varieties.slice(0,2).join(', ')}</td><td style="color:var(--text3);font-size:11px">${m.lines.join(', ')}</td></tr>`;
+    return`<tr>
+      <td style="color:var(--navy);font-weight:600">${pod}</td>
+      <td class="mono">${m.count}</td>
+      <td class="mono" style="color:var(--text3)">${(m.count/total*100).toFixed(0)}%</td>
+      <td>${topB}</td>
+      <td class="mono" style="color:var(--blue);font-weight:600">${fp(avg(m.prices))}</td>
+      <td style="color:var(--text3);font-size:11px">${m.varieties.slice(0,2).join(', ')}</td>
+      <td style="color:var(--text3);font-size:11px">${m.lines.join(', ')}</td>
+    </tr>`;
   }).join('');
 }
 
+// ── SAVE ───────────────────────────────────────────
 async function saveShipment(){
   const buyer=(document.getElementById('f-buyer').value||'').trim();
   const pod=(document.getElementById('f-pod').value||'').trim();
-  if(!buyer||!pod){toast('Buyer and destination are required','error');return;}
+  if(!buyer||!pod){toast(t('Buyer and destination are required','المشتري والوجهة مطلوبان'),'error');return;}
   const entry={
     buyer:buyer.toUpperCase(),pod:pod.toUpperCase(),
     variety:document.getElementById('f-variety').value,
@@ -453,6 +699,7 @@ async function saveShipment(){
     vessel:document.getElementById('f-vessel').value||null,
     shipping_line:document.getElementById('f-line').value,
     price:parseFloat(document.getElementById('f-price').value)||null,
+    price_100:parseFloat(document.getElementById('f-price100').value)||null,
     payment_terms:document.getElementById('f-terms').value,
     container_numbers:document.getElementById('f-containers').value||null,
     booking_ref:document.getElementById('f-booking').value||null,
@@ -464,28 +711,211 @@ async function saveShipment(){
   try{
     const{error}=await db.from('shipments').insert([entry]);
     if(error)throw error;
-    toast('Shipment saved to database');
+    toast(t('Shipment saved to database','تم حفظ الشحنة في قاعدة البيانات'));
     closeModal();
+    await loadData();
+  }catch(e){toast(t('Error: ','خطأ: ')+e.message,'error');}
+}
+
+// ── EDIT ───────────────────────────────────────────
+function openEdit(id){
+  const d=DATA.find(x=>x.id===id);
+  if(!d)return;
+  document.getElementById('e-id').value=d.id;
+  document.getElementById('e-buyer').value=d.buyer||'';
+  document.getElementById('e-pod').value=d.pod||'';
+  document.getElementById('e-etd').value=d.etd||'';
+  document.getElementById('e-eta').value=d.eta||'';
+  document.getElementById('e-vessel').value=d.vessel||'';
+  document.getElementById('e-containers').value=d.container_numbers||'';
+  document.getElementById('e-booking').value=d.booking_ref||'';
+  document.getElementById('e-supplier').value=d.supplier||'';
+  document.getElementById('e-brand').value=d.brand||'';
+  document.getElementById('e-ref').value=d.ref||'';
+  document.getElementById('e-price').value=d.price||'';
+  document.getElementById('e-price100').value=d.price_100||'';
+  document.getElementById('e-notes').value=d.notes||'';
+  // Set selects
+  ['e-variety','e-class','e-line','e-terms','e-claim','e-shipstatus'].forEach(sid=>{
+    const field={
+      'e-variety':'variety','e-class':'class','e-line':'shipping_line',
+      'e-terms':'payment_terms','e-claim':'claim_status','e-shipstatus':'shipment_status'
+    }[sid];
+    const el=document.getElementById(sid);
+    if(!el)return;
+    const val=d[field]||'';
+    for(let o of el.options){if(o.value===val||o.text===val){el.value=o.value;break;}}
+  });
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEdit(){document.getElementById('editOverlay').classList.remove('open');}
+
+async function updateShipment(){
+  const id=document.getElementById('e-id').value;
+  const buyer=(document.getElementById('e-buyer').value||'').trim();
+  const pod=(document.getElementById('e-pod').value||'').trim();
+  if(!buyer||!pod){toast('Buyer and destination are required','error');return;}
+  const updates={
+    buyer:buyer.toUpperCase(), pod:pod.toUpperCase(),
+    variety:document.getElementById('e-variety').value,
+    class:document.getElementById('e-class').value,
+    etd:document.getElementById('e-etd').value||null,
+    eta:document.getElementById('e-eta').value||null,
+    vessel:document.getElementById('e-vessel').value||null,
+    shipping_line:document.getElementById('e-line').value,
+    price:parseFloat(document.getElementById('e-price').value)||null,
+    price_100:parseFloat(document.getElementById('e-price100').value)||null,
+    payment_terms:document.getElementById('e-terms').value,
+    container_numbers:document.getElementById('e-containers').value||null,
+    booking_ref:document.getElementById('e-booking').value||null,
+    supplier:document.getElementById('e-supplier').value||null,
+    brand:document.getElementById('e-brand').value||null,
+    ref:document.getElementById('e-ref').value||null,
+    claim_status:document.getElementById('e-claim').value,
+    shipment_status:document.getElementById('e-shipstatus')?.value||'Pending',
+    notes:document.getElementById('e-notes').value||null,
+  };
+  try{
+    const{error}=await db.from('shipments').update(updates).eq('id',id);
+    if(error)throw error;
+    toast('Shipment updated');
+    closeEdit();
     await loadData();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
+
 async function deleteSh(id){
-  if(!confirm('Delete this shipment from the database?'))return;
+  if(!confirm(t('Delete this shipment from the database?','هل تريد حذف هذه الشحنة من قاعدة البيانات؟')))return;
   try{
     const{error}=await db.from('shipments').delete().eq('id',id);
     if(error)throw error;
-    toast('Shipment deleted');
+    toast(t('Shipment deleted','تم حذف الشحنة'));
     await loadData();
+  }catch(e){toast(t('Error: ','خطأ: ')+e.message,'error');}
+}
+
+let RDATA=[];
+
+async function loadReceivables(){
+  try{
+    const{data,error}=await db.from('receivables').select('*').order('group_name');
+    if(error)throw error;
+    RDATA=data||[];
+    renderReceivables();
+  }catch(e){console.error('Receivables error:',e);}
+}
+
+function fmtM(n){
+  if(!n&&n!==0)return'—';
+  const abs=Math.abs(n);
+  if(abs>=1000000)return(n<0?'-':'')+'$'+(abs/1000000).toFixed(2)+'M';
+  if(abs>=1000)return(n<0?'-':'')+'$'+(abs/1000).toFixed(1)+'k';
+  return(n<0?'-':'')+'$'+Math.abs(n).toFixed(0);
+}
+
+function renderReceivables(){
+  if(!RDATA.length)return;
+
+  const totalInvoiced=RDATA.reduce((s,r)=>s+(r.value_usd||0),0);
+  const totalPaid=RDATA.reduce((s,r)=>s+(r.paid_usd||0),0);
+  const totalBalance=RDATA.reduce((s,r)=>s+(r.balance||0),0);
+  const totalCtns=RDATA.reduce((s,r)=>s+(r.containers||0),0);
+  const rate=totalInvoiced?((totalPaid/totalInvoiced)*100).toFixed(0)+'%':'—';
+
+  document.getElementById('r-total').textContent=fmtM(totalBalance);
+  document.getElementById('r-invoiced').textContent=fmtM(totalInvoiced);
+  document.getElementById('r-collected').textContent=fmtM(totalPaid);
+  document.getElementById('r-rate').textContent=rate;
+  document.getElementById('r-ctns').textContent=totalCtns;
+
+  // Group summary cards
+  const groups={};
+  RDATA.forEach(r=>{
+    const g=r.group_name||'Other';
+    if(!groups[g])groups[g]={invoiced:0,paid:0,balance:0,ctns:0,type:r.client_type};
+    groups[g].invoiced+=r.value_usd||0;
+    groups[g].paid+=r.paid_usd||0;
+    groups[g].balance+=r.balance||0;
+    groups[g].ctns+=r.containers||0;
+  });
+
+  const groupColors={
+    'Gulf Countries':'var(--blue2)','A.NADA':'var(--purple)',
+    'SSL':'var(--teal)','BGP':'var(--amber)','HEBA':'var(--green)','Nile':'var(--navy)'
+  };
+
+  document.getElementById('r-group-cards').innerHTML=Object.entries(groups).map(([name,g])=>{
+    const colRate=g.invoiced?(g.paid/g.invoiced*100).toFixed(0):0;
+    const col=groupColors[name]||'var(--blue2)';
+    const balColor=g.balance>50000?'var(--red)':g.balance>0?'var(--amber)':'var(--green)';
+    return`<div class="panel" style="border-top:3px solid ${col}">
+      <div class="panel-header"><div class="panel-title">${name}</div><div class="panel-sub">${g.ctns} containers · ${g.type}</div></div>
+      <div class="panel-body">
+        <div class="bar-row"><div class="bar-label">Invoiced</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy)">${fmtM(g.invoiced)}</div></div>
+        <div class="bar-row"><div class="bar-label">Collected</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--green)">${fmtM(g.paid)}</div></div>
+        <div class="bar-row"><div class="bar-label">Outstanding</div><div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:${balColor}">${fmtM(g.balance)}</div></div>
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-bottom:4px"><span>Collection rate</span><span>${colRate}%</span></div>
+          <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;width:${colRate}%;background:${col};border-radius:3px;transition:width 0.8s ease"></div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Client table
+  document.getElementById('r-tbody').innerHTML=RDATA.map(r=>{
+    const bal=r.balance||0;
+    const balColor=bal>50000?'var(--red)':bal>5000?'var(--amber)':bal>0?'var(--text2)':'var(--green)';
+    const status=bal>50000
+      ?`<span class="badge badge-claim">⚠ High</span>`
+      :bal>5000
+      ?`<span class="badge badge-solved">↑ Pending</span>`
+      :bal<0
+      ?`<span class="badge" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;">↓ We Owe</span>`
+      :bal===0
+      ?`<span class="badge badge-clean">✓ Settled</span>`
+      :`<span class="badge badge-clean">✓ Low</span>`;
+    return`<tr>
+      <td style="color:var(--navy);font-weight:600">${r.client_name}</td>
+      <td><span style="background:var(--blue3);color:var(--blue2);padding:2px 8px;border-radius:10px;font-size:10px;font-family:var(--font-mono)">${r.group_name||'—'}</span></td>
+      <td style="color:var(--text3);font-size:11px">${r.client_type||'—'}</td>
+      <td class="mono">${r.containers||'—'}</td>
+      <td class="mono" style="color:var(--text2)">${fmtM(r.value_usd)}</td>
+      <td class="mono" style="color:var(--green)">${fmtM(r.paid_usd)}</td>
+      <td class="mono" style="color:var(--text3)">${fmtM(r.credits)}</td>
+      <td class="mono" style="color:${balColor};font-weight:700">${fmtM(bal)}</td>
+      <td>${status}</td>
+      <td><button class="edit-btn" onclick="editReceivable('${r.id}')">✎</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function editReceivable(id){
+  const r=RDATA.find(x=>x.id===id);
+  if(!r)return;
+  const newBalance=prompt(`Update balance for ${r.client_name}:\nCurrent balance: $${r.balance}\n\nEnter new balance (USD):`,r.balance);
+  if(newBalance===null)return;
+  const newPaid=prompt(`Update paid amount:\nCurrent paid: $${r.paid_usd}\n\nEnter new paid amount (USD):`,r.paid_usd);
+  if(newPaid===null)return;
+  try{
+    const{error}=await db.from('receivables').update({
+      balance:parseFloat(newBalance)||0,
+      paid_usd:parseFloat(newPaid)||0,
+    }).eq('id',id);
+    if(error)throw error;
+    toast('Receivable updated');
+    await loadReceivables();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-function openModal(){document.getElementById('modalOverlay').classList.add('open');}
+
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
 
 function showTab(id,el){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(tp=>tp.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   el.classList.add('active');
 }
@@ -495,8 +925,9 @@ function renderAll(){
 }
 
 db.channel('shipments-rt').on('postgres_changes',{event:'*',schema:'public',table:'shipments'},()=>loadData()).subscribe();
-
+db.channel('receivables-rt').on('postgres_changes',{event:'*',schema:'public',table:'receivables'},()=>loadReceivables()).subscribe();
 loadData();
+loadReceivables();
 </script>
 </body>
 </html>
