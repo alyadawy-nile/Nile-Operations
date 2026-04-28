@@ -364,7 +364,7 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
       <div class="kpi teal"><div class="kpi-label" data-en="Active Buyers" data-ar="المشترون النشطون">Active Buyers</div><div class="kpi-value" id="k-buyers">—</div><div class="kpi-sub" data-en="Unique accounts" data-ar="حسابات فريدة">Unique accounts</div></div>
       <div class="kpi blue"><div class="kpi-label" data-en="Destinations" data-ar="الوجهات">Destinations</div><div class="kpi-value" id="k-pods">—</div><div class="kpi-sub" data-en="Active ports" data-ar="موانئ نشطة">Active ports</div></div>
       <div class="kpi red"><div class="kpi-label" data-en="Open Claims" data-ar="مطالبات مفتوحة">Open Claims</div><div class="kpi-value" id="k-claims">—</div><div class="kpi-sub" data-en="Need action" data-ar="تحتاج إجراء">Need action</div></div>
-      <div class="kpi green"><div class="kpi-label" data-en="Avg Price" data-ar="متوسط السعر">Avg Price</div><div class="kpi-value" id="k-price">—</div><div class="kpi-sub" data-en="USD / carton (fresh)" data-ar="دولار / كرتون (طازج)">USD / carton (fresh)</div></div>
+      <div class="kpi green"><div class="kpi-label" data-en="Avg Price" data-ar="متوسط السعر">Avg Price</div><div class="kpi-value" id="k-price">—</div><div class="kpi-sub" data-en="USD / ton (fresh)" data-ar="دولار / طن (طازج)">USD / ton (fresh)</div></div>
     </div>
     <div class="grid-2">
       <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Buyer Volume" data-ar="حجم المشترين">Buyer Volume</div><div class="panel-sub" data-en="Shipments by account" data-ar="شحنات حسب الحساب">Shipments by account</div></div><div class="panel-body" id="buyer-bars"></div></div>
@@ -375,7 +375,7 @@ tr:hover .del-btn, tr:hover .edit-btn{opacity:1;}
       <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Shipping Lines" data-ar="شركات الشحن">Shipping Lines</div></div><div class="panel-body" id="line-bars"></div></div>
       <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Claim Overview" data-ar="نظرة على المطالبات">Claim Overview</div></div><div class="panel-body" id="claim-bars"></div></div>
     </div>
-    <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Average Price by Destination" data-ar="متوسط السعر حسب الوجهة">Average Price by Destination</div><div class="panel-sub" data-en="USD per carton — fresh only" data-ar="دولار للكرتون — طازج فقط">USD per carton — fresh only</div></div><div class="panel-body"><div class="price-grid" id="price-by-market"></div></div></div>
+    <div class="panel"><div class="panel-header"><div class="panel-title" data-en="Average Price by Market" data-ar="متوسط السعر حسب السوق">Average Price by Market</div><div class="panel-sub" data-en="USD per ton — price per carton × 66.7" data-ar="دولار للطن — سعر الكرتون × 66.7">USD per ton — price per carton × 66.7</div></div><div class="panel-body"><div class="price-grid" id="price-by-market"></div></div></div>
   </div>
 
   <!-- SHIPMENTS -->
@@ -592,11 +592,12 @@ function renderOverview(){
   const pods=new Set(DATA.map(d=>d.pod)).size;
   const open=DATA.filter(d=>ct(d.claim_status)==='OPEN').length;
   const prices=DATA.map(d=>parseFloat(d.price)).filter(x=>!isNaN(x)&&x>2);
+  const avgPerTon = avg(prices) * 66.7;
   document.getElementById('k-total').textContent=total;
   document.getElementById('k-buyers').textContent=buyers;
   document.getElementById('k-pods').textContent=pods;
   document.getElementById('k-claims').textContent=open;
-  document.getElementById('k-price').textContent=fp(avg(prices));
+  document.getElementById('k-price').textContent = avgPerTon ? '$'+Math.round(avgPerTon) : '—';
 
   const bc={};DATA.forEach(d=>{bc[d.buyer]=(bc[d.buyer]||0)+1;});
   bars(Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,8),document.getElementById('buyer-bars'));
@@ -631,12 +632,43 @@ function renderOverview(){
       <div class="bar-val">${v}</div>
     </div>`).join('');
 
-  const pm={};DATA.forEach(d=>{if(!pm[d.pod])pm[d.pod]={prices:[],count:0};pm[d.pod].count++;const p=parseFloat(d.price);if(!isNaN(p)&&p>2)pm[d.pod].prices.push(p);});
-  document.getElementById('price-by-market').innerHTML=Object.entries(pm).sort((a,b)=>b[1].count-a[1].count).slice(0,8).map(([pod,m])=>{
+  // Gulf ports → group as "Gulf". All others → country name. Formula: price × 66.7
+  const PORT_COUNTRY = {
+    'SHANGHAI':'China','SHEKOU':'China','NINGBO':'China','TIANJIN':'China',
+    'DUBLIN':'Ireland','PORT KELANG':'Malaysia','KOTA KINABALU':'Malaysia','BELAWAN':'Indonesia',
+    'SURABAYA':'Indonesia','HONG KONG':'Hong Kong','ROTTERDAM':'Netherlands',
+    'RIJEKA':'Croatia','KOPER':'Slovenia','SAINT PETERSBURG':'Russia',
+    'NHAVA SHEVA':'India','ENNORE':'India','ENNORE CHENNAI':'India',
+    'JEDDAH':'Gulf','JEBEL ALI':'Gulf','DAMMAM':'Gulf','ABU DHABI':'Gulf',
+    'KUWAIT':'Gulf','MUSCAT':'Gulf','DOHA':'Gulf','AQABA':'Gulf',
+    'BEIRUT':'Gulf','LATTAKIA':'Gulf',
+    'SANTOS':'Brazil','ITAPOA':'Brazil','FREMANTLE':'Australia',
+    'SINGAPORE':'Singapore','GUATEMALA - PUERTO QUETZAL':'Guatemala',
+    'GUATEMALA (QUETZALI)':'Guatemala','PUERTO QUETZAL TRANSIT TO EL SALVADOR':'El Salvador',
+  };
+
+  const pm={};
+  DATA.forEach(d=>{
+    if(!d.pod) return;
+    const podUp = d.pod.trim().toUpperCase();
+    let market = null;
+    for(const [port,ctry] of Object.entries(PORT_COUNTRY)){
+      if(podUp.includes(port.toUpperCase())){market=ctry;break;}
+    }
+    if(!market) market = d.pod;
+    if(!pm[market])pm[market]={prices:[],count:0};
+    pm[market].count++;
+    const p=parseFloat(d.price);
+    if(!isNaN(p)&&p>2) pm[market].prices.push(p*66.7);
+  });
+
+  document.getElementById('price-by-market').innerHTML=Object.entries(pm)
+    .filter(([,m])=>m.prices.length>0)
+    .sort((a,b)=>b[1].count-a[1].count).slice(0,8).map(([market,m])=>{
     const a=avg(m.prices);
-    const cls=a>9?'t-premium':a>7?'t-mid':'t-low';
-    const lbl=a>9?t('▲ Premium','▲ ممتاز'):a>7?t('◆ Mid-range','◆ متوسط'):t('▼ Suppressed','▼ منخفض');
-    return`<div class="price-card"><div class="price-market">${pod}</div><div class="price-val">${fp(a)}</div><div class="price-trend ${cls}">${lbl}</div></div>`;
+    const cls=a>600?'t-premium':a>450?'t-mid':'t-low';
+    const lbl=a>600?t('▲ Premium','▲ ممتاز'):a>450?t('◆ Mid-range','◆ متوسط'):t('▼ Suppressed','▼ منخفض');
+    return`<div class="price-card"><div class="price-market">${market}</div><div class="price-val">$${Math.round(a)}</div><div class="price-trend ${cls}">${lbl} / ton</div></div>`;
   }).join('');
 }
 
