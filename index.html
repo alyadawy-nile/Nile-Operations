@@ -811,15 +811,31 @@ function renderMarkets(){
 }
 
 // ── SAVE ───────────────────────────────────────────
+// Week calculation: Week 1 = Jan 1, each week is 7 days
+function getSeasonWeek(dateStr){
+  if(!dateStr) return null;
+  try{
+    const d = new Date(dateStr);
+    const year = d.getFullYear();
+    const jan1 = new Date(year, 0, 1);
+    const dayOfYear = Math.floor((d - jan1) / 86400000);
+    const week = Math.floor(dayOfYear / 7) + 1;
+    // Handle week 52 (Dec dates that belong to prior season)
+    if(d.getMonth() === 11) return 52;
+    return week;
+  }catch(e){ return null; }
+}
+
 async function saveShipment(){
   const buyer=(document.getElementById('f-buyer').value||'').trim();
   const pod=(document.getElementById('f-pod').value||'').trim();
   if(!buyer||!pod){toast(t('Buyer and destination are required','المشتري والوجهة مطلوبان'),'error');return;}
+  const etd = document.getElementById('f-etd').value||null;
   const entry={
     buyer:buyer.toUpperCase(),pod:pod.toUpperCase(),
     variety:document.getElementById('f-variety').value,
     class:document.getElementById('f-class').value,
-    etd:document.getElementById('f-etd').value||null,
+    etd:etd,
     eta:document.getElementById('f-eta').value||null,
     vessel:document.getElementById('f-vessel').value||null,
     shipping_line:document.getElementById('f-line').value,
@@ -832,6 +848,7 @@ async function saveShipment(){
     brand:document.getElementById('f-brand').value||null,
     claim_status:document.getElementById('f-claim').value,
     notes:document.getElementById('f-notes').value||null,
+    season_week:getSeasonWeek(etd),
   };
   try{
     const{error}=await db.from('shipments').insert([entry]);
@@ -900,6 +917,7 @@ async function updateShipment(){
     claim_status:document.getElementById('e-claim').value,
     shipment_status:document.getElementById('e-shipstatus')?.value||'Pending',
     notes:document.getElementById('e-notes').value||null,
+    season_week:getSeasonWeek(document.getElementById('e-etd').value||null),
   };
   try{
     const{error}=await db.from('shipments').update(updates).eq('id',id);
