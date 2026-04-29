@@ -582,6 +582,7 @@ async function loadData(){
     if(error)throw error;
     DATA=data||[];
     renderAll();
+    restoreTab();
   }catch(e){toast(t('Connection error: ','خطأ في الاتصال: ')+e.message,'error');console.error(e);}
 }
 
@@ -677,7 +678,7 @@ function populateFilters(){
   const pods=[...new Set(DATA.map(d=>d.pod).filter(Boolean))].sort();
   const vars=[...new Set(DATA.map(d=>(d.variety||'').trim()).filter(Boolean))].sort();
   const lines=[...new Set(DATA.map(d=>d.shipping_line).filter(Boolean))].sort();
-  const weeks=[...new Set(DATA.map(d=>d.season_week).filter(Boolean))].sort((a,b)=>a-b);
+  const weeks=[...new Set(DATA.map(d=>d.season_week).filter(w=>w!=null))].sort((a,b)=>Number(a)-Number(b));
   document.getElementById('s-pod').innerHTML=`<option value="">${t('All Destinations','كل الوجهات')}</option>`+pods.map(p=>`<option>${p}</option>`).join('');
   document.getElementById('s-variety').innerHTML=`<option value="">${t('All Varieties','كل الأصناف')}</option>`+vars.map(v=>`<option>${v}</option>`).join('');
   document.getElementById('s-line').innerHTML=`<option value="">${t('All Lines','كل شركات الشحن')}</option>`+lines.map(l=>`<option>${l}</option>`).join('');
@@ -1315,7 +1316,18 @@ function showTab(id,el){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(tp=>tp.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
-  el.classList.add('active');
+  if(el) el.classList.add('active');
+  // Save tab to URL hash so refresh restores it
+  window.location.hash = id;
+}
+
+function restoreTab(){
+  const hash = window.location.hash.replace('#','');
+  const validTabs = ['overview','shipments','claims','buyers','markets','receivables'];
+  if(hash && validTabs.includes(hash)){
+    const btn = document.querySelector(`.tab[onclick*="'${hash}'"]`);
+    showTab(hash, btn);
+  }
 }
 
 function renderAll(){
